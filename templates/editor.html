@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarkSync</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+        }
+        h1 {
+            text-align: center;
+            margin: 15px;
+        }
+        .container {
+            display: flex;
+            flex: 1; /* Увеличиваем контейнер, чтобы занимал свободное пространство */
+        }
+        textarea {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #ccc;
+            background-color: #222;
+            color: #fff;
+            padding: 10px;
+            resize: none; /* Запрещает изменение размера текстовой области */
+        }
+        .preview {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #666;
+            background-color: #333;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        table {
+            border-collapse: collapse; /* Убирает двойные границы */
+            width: 100%; /* Полная ширина таблицы */
+        }
+        th, td {
+            border: 1px solid #444; /* Граница вокруг ячеек */
+            padding: 8px; /* Отступы внутри ячеек */
+            text-align: left; /* Выравнивание содержимого в ячейках */
+        }
+        button {
+            margin: 10px;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>MarkSync</h1>
+    <div class="container">
+        <form method="POST" style="flex: 1; display: flex; flex-direction: column;">
+            <textarea name="text" placeholder="Введите ваш Markdown здесь...">{{ text }}</textarea>
+            <button type="submit">Предпросмотр</button>
+        </form>
+        <div class="preview" style="flex: 1;">
+            <h2>Предпросмотр</h2>
+            <div>{{ html|safe }}</div>
+        </div>
+    </div>
+</body>
+</html>
