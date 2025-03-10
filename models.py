@@ -3,7 +3,6 @@ from flask_login import UserMixin
 from config import db
 from datetime import datetime
 
-# Base = sqlalchemy.declarative.declarative_base()
 
 class Users(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -13,7 +12,6 @@ class Users(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text(), nullable=True)
     avatar = db.Column(db.String(255), nullable=True)
-    refresh_token = db.Column(db.String(255), nullable=True)
 
 class Notes(db.Model):
     __tablename__ = 'notes'
