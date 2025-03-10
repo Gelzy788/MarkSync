@@ -2,6 +2,7 @@ import sqlalchemy
 from flask_login import UserMixin
 from config import db
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class Users(db.Model, UserMixin):
@@ -12,6 +13,12 @@ class Users(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text(), nullable=True)
     avatar = db.Column(db.String(255), nullable=True)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+    
+    def get_id(self):
+        return str(self.ID)
 
 class Notes(db.Model):
     __tablename__ = 'notes'
