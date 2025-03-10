@@ -10,14 +10,28 @@
     <div class="register-container">
         <h1>Регистрация</h1>
         <form method="POST" action="{{ url_for('register') }}">
-            {{ form.hidden_tag() }}  <!-- This adds the CSRF token -->
-            {{ form.username.label }} {{ form.username }}
-            {{ form.email.label }} {{ form.email }}
-            {{ form.password.label }} {{ form.password }}
-            {{ form.confirm_password.label }} {{ form.confirm_password }}
-            {{ form.submit }}
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.username.label }}
+                {{ form.username }}
+            </div>
+            <div class="form-group">
+                {{ form.email.label }}
+                {{ form.email }}
+            </div>
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password }}
+            </div>
+            <div class="form-group">
+                {{ form.confirm_password.label }}
+                {{ form.confirm_password }}
+            </div>
+            <div class="form-group">
+                {{ form.submit }}
+            </div>
         </form>
-        <p class="login-link">Уже есть аккаунт? <a href="#">Войдите</a></p>
+        <p class="login-link">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите</a></p>
     </div>
 </body>
 </html>
