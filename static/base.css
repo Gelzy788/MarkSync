@@ -1,0 +1,25 @@
+/* Стили для кнопки меню */
+.navbar-toggler {
+    display: none; /* Скрываем кнопку по умолчанию */
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 768px) {
+    .navbar-toggler {
+        display: block; /* Показываем кнопку на мобильных устройствах */
+    }
+
+    .navbar-nav {
+        display: none; /* Скрываем меню по умолчанию */
+        width: 100%;
+    }
+
+    .navbar-nav.active {
+        display: flex; /* Показываем меню при активации */
+    }
+}

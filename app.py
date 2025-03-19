@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
-from flask_login import logout_user, login_required
+from flask_login import logout_user, login_required, current_user
 from database import *
 from config import *
 from models import *
@@ -30,6 +30,7 @@ def register():
         res = add_user(username, email, password)
         if res == 500:
             print("аккаунт добавлен")
+            return redirect(url_for('profile'))
         else:
             db.session.rollback()
             print('Ошибка при регистрации: такой пользователь или email уже существует.', 'error')
@@ -37,20 +38,28 @@ def register():
 
     return render_template('register.html', title="Регистрация")
 
+# <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+    print("страница загружена")
     if form.validate_on_submit():
+        print("кнопка нажата")
         email = form.email.data
         password = form.password.data
-        res = login_user(email, password)
-        if res == 500:
+        res = login_user_db(email, password)
+        if res[1] == 500:
             print("Вы успешно вошли")
             return redirect(url_for('main'))
         else:
             flash('Неверный email или пароль.', 'error')
 
     return render_template('login.html', form=form, title="Вход в аккаунт")
+
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html', username=current_user.username, email=current_user.email, title="Профиль")
 
 @app.route('/logout')
 @login_required

@@ -17,9 +17,10 @@ def add_user(username, email, password):
 
 def login_user_db(email, password):
     user = Users.query.filter_by(email=email).first()
+    print("Пользователь найден", user)
     if user and check_password_hash(user.password, password):
-        login_user()
-        return 'Вы успешно вошли в аккаунт!', 'success'
+        login_user(user, remember=True)
+        return 'Вы успешно вошли в аккаунт!', 500
     else:
         return "Пользователь не найден"
     

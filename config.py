@@ -10,4 +10,4 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
-csrf = CSRFProtect(app)
+# csrf = CSRFProtect(app)

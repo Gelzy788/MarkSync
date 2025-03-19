@@ -10,14 +10,28 @@
     <div class="register-container">
         <h1>Вход в аккаунт</h1>
         <form id="login-form" method="POST" action="{{ url_for('login') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- CSRF-токен -->
+            {{ form.hidden_tag() }}  <!-- CSRF-токен -->
             <div class="form-group">
-                <label for="email">Электронная почта</label>
-                <input type="email" id="email" name="email" required>
+                {{ form.email.label }}
+                {{ form.email(size=32) }}
+                {% if form.email.errors %}
+                    <div class="errors">
+                        {% for error in form.email.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
             <div class="form-group">
-                <label for="password">Пароль</label>
-                <input type="password" id="password" name="password" required>
+                {{ form.password.label }}
+                {{ form.password(size=32) }}
+                {% if form.password.errors %}
+                    <div class="errors">
+                        {% for error in form.password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
             <button type="submit">Войти</button>
         </form>

@@ -13,6 +13,9 @@ class Users(db.Model, UserMixin):
     description = db.Column(db.Text(), nullable=True)
     avatar = db.Column(db.String(255), nullable=True)
 
+    def get_id(self):
+        return str(self.ID)
+
 class Notes(db.Model):
     __tablename__ = 'notes'
     ID = db.Column(db.Integer(), primary_key=True, autoincrement=True)
