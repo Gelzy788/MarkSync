@@ -39,7 +39,6 @@ def register():
     return render_template('register.html', title="Регистрация")
 
 # <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-# test
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
