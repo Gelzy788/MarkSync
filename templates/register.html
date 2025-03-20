@@ -9,18 +9,23 @@
 <body>
     <div class="register-container">
         <h1>Регистрация</h1>
-        <form id="register-form" method="POST" action="{{ url_for('register') }}">
+        <form method="POST" action="{{ url_for('register') }}">
+            {{ form.hidden_tag() }}
             <div class="form-group">
-                <label for="username">Имя пользователя</label>
-                <input type="text" id="username" name="username" required>
+                {{ form.username.label }}
+                {{ form.username }}
             </div>
             <div class="form-group">
-                <label for="email">Электронная почта</label>
-                <input type="email" id="email" name="email" required>
+                {{ form.email.label }}
+                {{ form.email }}
             </div>
             <div class="form-group">
-                <label for="password">Пароль</label>
-                <input type="password" id="password" name="password" required>
+                {{ form.password.label }}
+                {{ form.password }}
+            </div>
+            <div class="form-group">
+                {{ form.confirm_password.label }}
+                {{ form.confirm_password }}
             </div>
             <div class="form-group">
                 <label for="confirm-password">Подтвердите пароль</label>
@@ -37,7 +42,7 @@
             {% endwith %}
             <button type="submit">Зарегистрироваться</button>
         </form>
-        <p class="login-link">Уже есть аккаунт? <a href="#">Войдите</a></p>
+        <p class="login-link">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите</a></p>
     </div>
 </body>
 </html>
