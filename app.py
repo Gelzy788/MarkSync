@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import logout_user, login_required, current_user
+from autorisation import *
 from database import *
 from config import *
 from models import *
@@ -13,7 +14,7 @@ def load_user(user_id):
 
 @app.route('/')
 def main():
-    pass
+    return render_template('main.html', title="Главная страница")
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
@@ -28,12 +29,11 @@ def register():
             return redirect(url_for('register'))
         
         res = add_user(username, email, password)
-        if res == 500:
-            print("аккаунт добавлен")
-            return redirect(url_for('profile'))
+        if res == 200:
+            return redirect(url_for('login'))
         else:
             db.session.rollback()
-            print('Ошибка при регистрации: такой пользователь или email уже существует.', 'error')
+            flash('Пользователь с такой почтой уже существует', 'error')
             return redirect(url_for('register'))
 
     return render_template('register.html', title="Регистрация")
@@ -48,9 +48,14 @@ def login():
         email = form.email.data
         password = form.password.data
         res = login_user_db(email, password)
-        if res[1] == 500:
-            print("Вы успешно вошли")
-            return redirect(url_for('main'))
+        if res[1] == 200:
+            # Создание и соохранение токенов
+            access_token = generate_access_token(res[0])
+            refresh_token = generate_refresh_token(res[0])
+            response = make_response(render_template('main.html', title="Главная страница"))
+            save_tokens(response, access_token, refresh_token)
+            return response
+            # return redirect(url_for('main'))
         else:
             flash('Неверный email или пароль.', 'error')
 

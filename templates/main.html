@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+    <header class="home-header">
+        <h1>Добро пожаловать на наш сайт!</h1>
+        <p>Здесь вы можете зарегистрироваться, войти в аккаунт и управлять своим профилем.</p>
+    </header>
+
+    <main class="home-content">
+        <section class="home-about">
+            <h2>О нашем сайте</h2>
+            <p>
+                Наш сайт предоставляет удобный инструмент для управления вашим профилем.
+                Вы можете зарегистрироваться, войти в систему, редактировать свои данные и многое другое.
+            </p>
+        </section>
+
+        <section class="home-actions">
+            <h2>Начните прямо сейчас</h2>
+            <div class="action-buttons">
+                <a href="{{ url_for('register') }}" class="btn btn-primary">Зарегистрироваться</a>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary">Войти</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="home-footer">
+        <p>&copy; 2023 Ваш сайт. Все права защищены.</p>
+    </footer>
+</body>
+</html>
