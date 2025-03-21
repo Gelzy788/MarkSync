@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarkSync</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,7 +22,7 @@
         }
         .container {
             display: flex;
-            flex: 1; /* Увеличиваем контейнер, чтобы занимал свободное пространство */
+            flex: 1;
         }
         textarea {
             width: 100%;
@@ -29,7 +31,7 @@
             background-color: #222;
             color: #fff;
             padding: 10px;
-            resize: none; /* Запрещает изменение размера текстовой области */
+            resize: none;
         }
         .preview {
             width: 100%;
@@ -40,13 +42,13 @@
             overflow-y: auto;
         }
         table {
-            border-collapse: collapse; /* Убирает двойные границы */
-            width: 100%; /* Полная ширина таблицы */
+            border-collapse: collapse;
+            width: 100%;
         }
         th, td {
-            border: 1px solid #444; /* Граница вокруг ячеек */
-            padding: 8px; /* Отступы внутри ячеек */
-            text-align: left; /* Выравнивание содержимого в ячейках */
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
         }
         button {
             margin: 10px;
