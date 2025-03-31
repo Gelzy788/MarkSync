@@ -4,6 +4,7 @@ from autorisation import *
 from config import *
 from models import *
 
+# Добавление пользователя в бд
 def add_user(username, email, password):
     hashed_password = generate_password_hash(password)
     new_user = Users(email=email, password=hashed_password, username=username)
@@ -15,6 +16,7 @@ def add_user(username, email, password):
         print("ERROR", e)
         return 401
 
+# Получение id пользователя для авторизации 
 def login_user_db(email, password):
     user = Users.query.filter_by(email=email).first()
     if user and check_password_hash(user.password, password):
@@ -22,6 +24,7 @@ def login_user_db(email, password):
     else:
         return "Пользователь не найден"
     
+# Добавление в бд refresh токен профиля
 def add_refresh_token_db(email, refresh_token):
     stmt = (
         update(Users)

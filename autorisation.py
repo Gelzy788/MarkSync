@@ -54,54 +54,7 @@ def save_tokens(response, access_token, refresh_token):
     print("Токены сохранены!", response)
     return response
 
-# обновление access токена при его истечении
-def update_access_token():
-    refresh_token = request.cookies.get('refresh_token')
-
-    if not refresh_token:
-        return jsonify({'message': 'Refresh token is missing!'}), 403
-
-    try:
-        data = jwt.decode(refresh_token, ACCESS_TOKEN_SECRET_KEY, algorithms=['HS256'])
-        user_id = data['user_id']
-
-        # Генерируем новый access token
-        print("Обновляем токен")
-        new_access_token = generate_access_token(user_id)
-        response = make_response(jsonify({'message': 'Token refreshed successfully!'}))
-        return save_tokens(response, new_access_token, refresh_token)
-
-    except:
-        return jsonify({'message': 'Refresh token is invalid or expired!'}), 403
-
-def update_access_token():
-    refresh_token = request.cookies.get("refresh_token")
-
-    if not refresh_token:
-        return jsonify({'message': 'Refresh token is missing!'}), 401
-
-    try:
-        data = jwt.decode(
-            refresh_token, REFRESH_TOKEN_SECRET_KEY, algorithms=["HS256"])
-        user_id = data['user_id']
-        jti = data['jti']  # Извлечение UUID из токена
-        user = Users.query.get(user_id)
-
-        if user and user.refresh_token == refresh_token:
-            new_access_token = jwt.encode({
-                'user': {'id': user.id, 'email': user.email, 'username': user.username},
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=ACCESS_TOKEN_EXPIRATION_TIME)
-            }, ACCESS_TOKEN_SECRET_KEY, algorithm="HS256")
-
-            return jsonify({"access_token": f"{new_access_token}"}), 200
-        else:
-            return jsonify({'message': 'Invalid refresh token!'}), 401
-    except jwt.ExpiredSignatureError:
-        return jsonify({'message': 'Refresh token expired!'}), 401
-    except Exception as e:
-        return jsonify({'message': 'Invalid refresh token!'}), 401
-
-
+# декоратор для проверки наличия и актуальности access токена
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
