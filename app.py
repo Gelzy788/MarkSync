@@ -42,36 +42,45 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    print("страница загружена")
     if form.validate_on_submit():
-        print("кнопка нажата")
         email = form.email.data
         password = form.password.data
         res = login_user_db(email, password)
         if res[1] == 200:
-            # Создание и соохранение токенов
             access_token = generate_access_token(res[0])
             refresh_token = generate_refresh_token(res[0])
             response = make_response(render_template('main.html', title="Главная страница"))
             save_tokens(response, access_token, refresh_token)
             return response
-            # return redirect(url_for('main'))
         else:
             flash('Неверный email или пароль.', 'error')
 
     return render_template('login.html', form=form, title="Вход в аккаунт")
 
 @app.route('/profile')
-@login_required
-def profile():
-    return render_template('profile.html', username=current_user.username, email=current_user.email, title="Профиль")
+@token_required
+def profile(user):
+    # user = get_user()
+    return render_template('profile.html', username=user.username, email=user.email, title="Профиль")
+
+
+@app.route('/protected')
+@token_required
+def protected(user):
+    user = get_user()
+    return jsonify({'message': f'Hello, {user.username}! This is a protected API endpoint.'})
 
 @app.route('/logout')
-@login_required
-def logout():
-    logout_user()
+@token_required
+def logout(user):
+    # logout_user()
+    response = make_response(redirect('/'))
+    response.set_cookie('access_token', '', expires=0)  # установка expires=0 удаляет куки
+    response.set_cookie('refresh_token', '', expires=0)  # установка expires=0 удаляет куки
+    return response
     flash('Вы вышли из аккаунта.', 'success')
     return redirect(url_for('main'))
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
+
