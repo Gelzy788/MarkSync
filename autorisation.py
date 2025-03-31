@@ -1,11 +1,14 @@
 from flask import Flask, make_response, request, flash, redirect, url_for, jsonify
 from flask_login import current_user
+
 import datetime
 from datetime import timedelta
-import jwt
+from functools import wraps
+
 from config import *
 from models import *
-from functools import wraps
+
+import jwt
 import uuid
 
 # Получение пользователя из бд

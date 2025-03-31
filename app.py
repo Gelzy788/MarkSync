@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, flash, redirect, url_for
 from autorisation import *
 from database import *
 from config import *
 from models import *
 from forms import *
+
+from flask import Flask, render_template, request, flash, redirect, url_for
 
 
 @app.route('/')
