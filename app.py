@@ -1,16 +1,10 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
-from flask_login import logout_user, login_required, current_user
 from autorisation import *
 from database import *
 from config import *
 from models import *
 from forms import *
 
-login_manager.init_app(app)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Users.query.get(int(user_id))
 
 @app.route('/')
 def main():

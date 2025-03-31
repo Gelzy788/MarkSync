@@ -13,5 +13,5 @@ REFRESH_TOKEN_SECRET_KEY = 'c80a73442699651fc4297eda6691f2960714a66225b7d31cf8da
 ACCESS_TOKEN_EXPIRATION_TIME = 1 # В минутах
 REFRESH_TOKEN_EXPIRATION_TIME = 30 # В днях
 db = SQLAlchemy(app)
-login_manager = LoginManager()
+# login_manager = LoginManager()
 # csrf = CSRFProtect(app)
