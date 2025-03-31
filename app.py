@@ -38,7 +38,6 @@ def register():
 
     return render_template('register.html', title="Регистрация")
 
-# <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -48,7 +47,8 @@ def login():
         res = login_user_db(email, password)
         if res[1] == 200:
             access_token = generate_access_token(res[0])
-            refresh_token = generate_refresh_token(res[0])
+            refresh_token = generate_refresh_token(res[0])# <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            add_refresh_token_db(email, refresh_token)
             response = make_response(render_template('main.html', title="Главная страница"))
             save_tokens(response, access_token, refresh_token)
             return response
@@ -71,15 +71,11 @@ def protected(user):
     return jsonify({'message': f'Hello, {user.username}! This is a protected API endpoint.'})
 
 @app.route('/logout')
-@token_required
-def logout(user):
-    # logout_user()
+def logout():
     response = make_response(redirect('/'))
     response.set_cookie('access_token', '', expires=0)  # установка expires=0 удаляет куки
     response.set_cookie('refresh_token', '', expires=0)  # установка expires=0 удаляет куки
     return response
-    flash('Вы вышли из аккаунта.', 'success')
-    return redirect(url_for('main'))
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
