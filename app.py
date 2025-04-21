@@ -5,7 +5,7 @@ from database import *
 from config import *
 from models import *
 from forms import *
-
+# test
 login_manager.init_app(app)
 
 @login_manager.user_loader
