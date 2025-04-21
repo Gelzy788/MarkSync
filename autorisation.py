@@ -6,7 +6,7 @@ from datetime import timedelta
 from functools import wraps
 
 from config import *
-from models import *
+from data.__all_models import *
 
 import jwt
 import uuid

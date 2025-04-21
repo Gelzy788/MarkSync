@@ -1,7 +1,7 @@
 from autorisation import *
 from database import *
 from config import *
-from models import *
+from data.__all_models import *
 from forms import *
 
 from flask import Flask, render_template, request, flash, redirect, url_for

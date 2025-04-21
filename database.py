@@ -2,7 +2,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import update
 from autorisation import *
 from config import *
-from models import *
+from data.__all_models import *
 
 # Добавление пользователя в бд
 def add_user(username, email, password):
