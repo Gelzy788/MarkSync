@@ -1,5 +1,4 @@
 from autorisation import *
-# from archive.database import *
 from config import *
 from data.__all_models import *
 from forms.register_form import *
