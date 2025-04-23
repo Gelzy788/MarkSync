@@ -9,13 +9,33 @@
 <body>
     <div class="register-container">
         <h1>Вход в аккаунт</h1>
-        <form method="POST" action="{{ url_for('login') }}">
-            {{ form.hidden_tag() }}
-            <div class="form-group"> {{ form.email.label }} {{ form.email }}</div>
-            <div class="form-group"> {{ form.password.label }} {{ form.password }}</div>
-            <div class="form-group"> {{ form.submit }}</div>
+        <form id="login-form" method="POST" action="{{ url_for('auth.login') }}">
+            {{ form.hidden_tag() }}  <!-- CSRF-токен -->
+            <div class="form-group">
+                {{ form.email.label }}
+                {{ form.email(size=32) }}
+                {% if form.email.errors %}
+                    <div class="errors">
+                        {% for error in form.email.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(size=32) }}
+                {% if form.password.errors %}
+                    <div class="errors">
+                        {% for error in form.password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <button type="submit">Войти</button>
         </form>
-        <p class="login-link">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a></p>
+        <p class="login-link">Нет аккаунта? <a href="{{ url_for('auth.register') }}">Зарегистрируйтесь</a></p>
     </div>
 </body>
 </html>
