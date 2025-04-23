@@ -9,7 +9,7 @@
 <body>
     <div class="register-container">
         <h1>Вход в аккаунт</h1>
-        <form id="login-form" method="POST" action="{{ url_for('login') }}">
+        <form id="login-form" method="POST" action="{{ url_for('auth.login') }}">
             {{ form.hidden_tag() }}  <!-- CSRF-токен -->
             <div class="form-group">
                 {{ form.email.label }}
@@ -35,7 +35,7 @@
             </div>
             <button type="submit">Войти</button>
         </form>
-        <p class="login-link">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a></p>
+        <p class="login-link">Нет аккаунта? <a href="{{ url_for('auth.register') }}">Зарегистрируйтесь</a></p>
     </div>
 </body>
 </html>

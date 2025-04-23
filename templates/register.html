@@ -21,7 +21,7 @@
             {% endif %}
         {% endwith %}
 
-        <form id="register-form" method="POST" action="{{ url_for('register') }}">
+        <form id="register-form" method="POST" action="{{ url_for('auth.register') }}">
             <div class="form-group">
                 <label for="username">Имя пользователя</label>
                 <input type="text" id="username" name="username" required>
@@ -40,7 +40,7 @@
             </div>
             <button type="submit">Зарегистрироваться</button>
         </form>
-        <p class="login-link">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите</a></p>
+        <p class="login-link">Уже есть аккаунт? <a href="{{ url_for('auth.login') }}">Войдите</a></p>
     </div>
 </body>
 </html>
