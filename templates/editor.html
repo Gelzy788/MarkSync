@@ -116,17 +116,17 @@
 
         .text-editor {
             flex: 1;
-            overflow-y: auto; /* Оставляем вертикальную прокрутку */
-            overflow-x: hidden; /* Убираем горизонтальную прокрутку */
+            overflow-y: auto;
+            overflow-x: hidden;
             border: 1px solid #ccc;
             background-color: #222;
             color: #fff;
             padding: 10px;
             margin-bottom: 10px;
-            height: 400px; /* Фиксированная высота */
-            max-height: 400px; /* Максимальная высота */
-            width: 800px; /* Фиксированная ширина */
-            max-width: 800px; /* Максимальная ширина */
+            height: 400px;
+            max-height: 400px;
+            width: 800px;
+            max-width: 800px;
         }
 
         .text-editor .CodeMirror {
@@ -137,16 +137,16 @@
 
         .preview-area {
             flex: 1;
-            overflow-y: auto; /* Вертикальная прокрутка */
-            overflow-x: auto; /* Горизонтальная прокрутка */
+            overflow-y: auto;
+            overflow-x: auto;
             border: 1px solid #666;
             background-color: #333;
             color: #fff;
             padding: 10px;
-            height: 400px; /* Фиксированная высота */
-            max-height: 400px; /* Максимальная высота */
-            width: 500px; /* Фиксированная ширина */
-            max-width: 500px; /* Максимальная ширина */
+            height: 400px;
+            max-height: 400px;
+            width: 500px;
+            max-width: 500px;
         }
     </style>
 </head>
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function () {
         styleActiveLine: true,
         height: "400px",
         maxHeight: "400px",
-        scrollHorizontally: false // Отключаем горизонтальную прокрутку
+        scrollHorizontally: false
     });
     document.querySelector('form').addEventListener('submit', function () {
         const textarea = document.querySelector('textarea[name=text]');
