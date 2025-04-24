@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarkSync</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/markdown/markdown.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
     <style>
         body {
@@ -24,6 +27,20 @@
             display: flex;
             flex: 1;
         }
+        .file-explorer {
+            width: 250px;
+            border-right: 1px solid #666;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        .file-explorer ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .file-explorer li {
+            margin: 5px 0;
+            cursor: pointer;
+        }
         textarea {
             width: 100%;
             height: 100%;
@@ -41,15 +58,6 @@
             padding: 10px;
             overflow-y: auto;
         }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        th, td {
-            border: 1px solid #444;
-            padding: 8px;
-            text-align: left;
-        }
         button {
             margin: 10px;
             padding: 10px 15px;
@@ -61,19 +69,268 @@
         button:hover {
             background-color: #0056b3;
         }
+        .chart-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .chart-image {
+            max-width: 100%;
+            border: 1px solid #444;
+            background: white;
+            padding: 10px;
+        }
+        .chart-error {
+            color: red;
+            padding: 10px;
+            border: 1px dashed red;
+        }
+        textarea {
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            tab-size: 2;
+        }
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .diagram-source {
+            background-color: #222;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            tab-size: 2;
+            display: block;
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            height: 100%;
+        }
+
+        .text-editor {
+            flex: 1;
+            overflow-y: auto; /* Оставляем вертикальную прокрутку */
+            overflow-x: hidden; /* Убираем горизонтальную прокрутку */
+            border: 1px solid #ccc;
+            background-color: #222;
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+            height: 400px; /* Фиксированная высота */
+            max-height: 400px; /* Максимальная высота */
+            width: 800px; /* Фиксированная ширина */
+            max-width: 800px; /* Максимальная ширина */
+        }
+
+        .text-editor .CodeMirror {
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .preview-area {
+            flex: 1;
+            overflow-y: auto; /* Вертикальная прокрутка */
+            overflow-x: auto; /* Горизонтальная прокрутка */
+            border: 1px solid #666;
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            height: 400px; /* Фиксированная высота */
+            max-height: 400px; /* Максимальная высота */
+            width: 500px; /* Фиксированная ширина */
+            max-width: 500px; /* Максимальная ширина */
+        }
     </style>
 </head>
 <body>
     <h1>MarkSync</h1>
     <div class="container">
+        <div class="file-explorer">
+            <h2>Файловый менеджер</h2>
+            <div id="currentPath">Текущий путь:</div>
+            <input type="text" id="folderName" placeholder="Имя папки" />
+            <button onclick="createFolder()">Создать папку</button>
+            <ul id="fileList"></ul>
+        </div>
+
         <form method="POST" style="flex: 1; display: flex; flex-direction: column;">
-            <textarea name="text" placeholder="Введите ваш Markdown здесь...">{{ text }}</textarea>
-            <button type="submit">Предпросмотр</button>
+            <input type="text" id="filename" placeholder="Введите имя файла" style="margin-top: 10px; padding: 10px;" />
+
+            <!-- Оборачиваем textarea в контейнер .text-editor -->
+            <div class="text-editor">
+                <textarea id="markdownEditor" name="text" placeholder="Введите ваш Markdown здесь...">{{ text }}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit">Предпросмотр</button>
+                <button type="button" onclick="saveFile()">Сохранить</button>
+                <button type="button" onclick="document.getElementById('fileInput').click()">Загрузить</button>
+                <button type="button" onclick="insertDiagramTemplate()">Вставить диаграмму</button>
+            </div>
+            <input type="file" id="fileInput" style="display: none;" accept=".md" onchange="loadFile(event)" />
         </form>
-        <div class="preview" style="flex: 1;">
+
+        <div class="preview" style="flex:1;">
             <h2>Предпросмотр</h2>
             <div>{{ html|safe }}</div>
         </div>
     </div>
+
+    <script>
+        const fileSystem = {
+            folders: { 'root': [] },
+            currentFolder: 'root',
+            parentFolder: null
+        };
+
+        function updateCurrentPath() {
+            const currentPath = document.getElementById('currentPath');
+            currentPath.textContent = `Текущий путь: ${fileSystem.currentFolder}`;
+        }
+
+        function createFolder() {
+            const folderName = document.getElementById('folderName').value.trim();
+            if (folderName) {
+                if (!fileSystem.folders[fileSystem.currentFolder]) {
+                    fileSystem.folders[fileSystem.currentFolder] = [];
+                }
+                fileSystem.folders[fileSystem.currentFolder].push({ name: folderName, type: 'folder' });
+                document.getElementById('folderName').value = '';
+                renderFileList();
+            }
+        }
+
+        function renderFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+
+            const folders = fileSystem.folders[fileSystem.currentFolder] || [];
+            folders.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item.name;
+
+                if (item.type === 'folder') {
+                    li.ondblclick = () => {
+                        fileSystem.parentFolder = fileSystem.currentFolder;
+                        fileSystem.currentFolder = item.name;
+                        renderFileList();
+                        updateCurrentPath();
+                    };
+                } else {
+                    li.onclick = () => loadFileFromList(item.name);
+                }
+
+                fileList.appendChild(li);
+            });
+
+            if (fileSystem.parentFolder) {
+                const backLi = document.createElement('li');
+                backLi.textContent = 'Назад';
+                backLi.onclick = () => {
+                    fileSystem.currentFolder = fileSystem.parentFolder;
+                    fileSystem.parentFolder = null;
+                    renderFileList();
+                    updateCurrentPath();
+                };
+                backLi.style.fontWeight = 'bold';
+                fileList.prepend(backLi);
+            }
+        }
+
+        function loadFileFromList(fileName) {
+            alert(`Загрузка файла: ${fileName}`);
+        }
+
+        function saveFile() {
+            const filename = document.getElementById('filename').value.trim();
+            const text = document.querySelector('textarea[name=text]').value;
+
+            if (filename) {
+                const blob = new Blob([text], { type: 'text/markdown' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${filename}.md`;
+                link.click();
+
+                alert(`Сохранение файла: ${filename} в папке ${fileSystem.currentFolder}`);
+            } else {
+                alert("Пожалуйста, введите имя файла.");
+            }
+        }
+
+        function loadFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.querySelector('textarea[name=text]').value = e.target.result;
+                    document.getElementById('filename').value = file.name.replace('.md', '');
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function insertDiagramTemplate() {
+    const template = `<d>
+{
+  type: 'bar',
+  data: {
+    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+    datasets: [{
+      label: 'Users',
+      data: [50, 60, 70, 180]
+    }, {
+      label: 'Revenue',
+      data: [100, 200, 300, 400]
+    }]
+  }
+}
+</d>`;
+
+    // Получаем экземпляр CodeMirror
+    const editor = document.querySelector('.CodeMirror').CodeMirror;
+
+    const cursor = editor.getCursor();
+
+    editor.replaceRange(template, cursor);
+
+    const newCursorPos = cursor.ch + template.indexOf('{');
+    editor.setCursor({ line: cursor.line, ch: newCursorPos });
+
+    editor.focus();
+}
+
+        updateCurrentPath();
+        renderFileList();
+    </script>
+        <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const editor = CodeMirror.fromTextArea(document.getElementById('markdownEditor'), {
+        mode: 'markdown',
+        lineNumbers: true,
+        theme: 'default',
+        lineWrapping: true,
+        autofocus: true,
+        fixedGutter: true,
+        viewportMargin: Infinity,
+        styleActiveLine: true,
+        height: "400px",
+        maxHeight: "400px",
+        scrollHorizontally: false // Отключаем горизонтальную прокрутку
+    });
+    document.querySelector('form').addEventListener('submit', function () {
+        const textarea = document.querySelector('textarea[name=text]');
+        textarea.value = editor.getValue();
+    });
+});
+    </script>
 </body>
 </html>
