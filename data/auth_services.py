@@ -37,7 +37,7 @@ def login_user_db(email, password):
 def generate_access_token(user_id):
     payload = {
         'user_id': user_id,
-        'exp': datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRATION_TIME)
+        'exp': datetime.datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRATION_TIME)
     }
     token = jwt.encode(payload, ACCESS_TOKEN_SECRET_KEY, algorithm='HS256')
     return token
@@ -46,7 +46,7 @@ def generate_access_token(user_id):
 def generate_refresh_token(user_id):
     payload = {
         'user_id': user_id,
-        'exp': datetime.now() + timedelta(days=REFRESH_TOKEN_EXPIRATION_TIME),  # Refresh token действителен 7 дней
+        'exp': datetime.datetime.now() + timedelta(days=REFRESH_TOKEN_EXPIRATION_TIME),  # Refresh token действителен 7 дней
         'iti': str(uuid.uuid4())
     }
     token = jwt.encode(payload, REFRESH_TOKEN_SECRET_KEY, algorithm='HS256')
