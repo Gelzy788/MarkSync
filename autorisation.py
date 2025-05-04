@@ -34,16 +34,15 @@ def token_required(f):
             # Попытка обновить токен через refresh_token
             refresh_token = request.cookies.get("refresh_token")
             
-            if refresh_token == Users.get_refresh_token():
-                try:
-                    refresh_data = jwt.decode(refresh_token, REFRESH_TOKEN_SECRET_KEY, algorithms=["HS256"])
-                    new_access_token = generate_access_token(refresh_data["user_id"])
-                    response = make_response(redirect(request.url))  # Редирект на ту же страницу
-                    save_tokens(response, new_access_token, refresh_token)
-                    print("Токен обновлен")
-                    return response
-                except:
-                    pass
+            try:
+                refresh_data = jwt.decode(refresh_token, REFRESH_TOKEN_SECRET_KEY, algorithms=["HS256"])
+                new_access_token = generate_access_token(refresh_data["user_id"])
+                response = make_response(redirect(request.url))  # Редирект на ту же страницу
+                save_tokens(response, new_access_token, refresh_token)
+                print("Токен обновлен")
+                return response
+            except Exception:
+                pass
             flash("Сессия истекла. Войдите снова", "error")
             return redirect(url_for('auth.login'))
         except jwt.InvalidTokenError:
