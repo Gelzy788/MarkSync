@@ -3,15 +3,15 @@ from autorisation import *
 from config import *
 from data.__all_models import *
 from forms.register_form import *
-from data import auth_blueprint
-from main import main_blueprint
+from data import auth_blueprint, notes_blueprint
+# from main import main_blueprint
 from utils import convert_diagrams, convert_tasks
 import markdown2
 
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 
 app.register_blueprint(auth_blueprint)
-app.register_blueprint(main_blueprint)
+app.register_blueprint(notes_blueprint)
 
 @app.route('/')
 def main():
