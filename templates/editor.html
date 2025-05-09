@@ -27,40 +27,19 @@
             display: flex;
             flex: 1;
         }
-        .files-sidebar {
+        .file-explorer {
             width: 250px;
             border-right: 1px solid #666;
             padding: 10px;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
         }
-        .files-list {
-            flex: 1;
-            overflow-y: auto;
-        }
-        .files-sidebar ul {
+        .file-explorer ul {
             list-style-type: none;
             padding: 0;
         }
-        .files-sidebar li {
+        .file-explorer li {
             margin: 5px 0;
-            padding: 8px;
             cursor: pointer;
-            border-radius: 4px;
-            background-color: #222;
-            transition: background-color 0.2s;
-        }
-        .files-sidebar li:hover {
-            background-color: #333;
-        }
-        .files-sidebar li.active {
-            background-color: #007BFF;
-        }
-        .files-actions {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #666;
         }
         textarea {
             width: 100%;
@@ -86,23 +65,10 @@
             color: white;
             border: none;
             cursor: pointer;
-            border-radius: 4px;
         }
         button:hover {
             background-color: #0056b3;
         }
-        .search-box {
-            padding: 8px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            border: 1px solid #666;
-            background-color: #222;
-            color: #fff;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* Остальные стили оставляем как были */
         .chart-container {
             margin: 20px 0;
             text-align: center;
@@ -122,6 +88,22 @@
             font-family: 'Courier New', monospace;
             white-space: pre;
             tab-size: 2;
+        }
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .diagram-source {
+            background-color: #222;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            tab-size: 2;
+            display: block;
         }
         .form-container {
             display: flex;
@@ -156,240 +138,366 @@
             background-color: #333;
             color: #fff;
             padding: 10px;
-            height: 400px;
-            max-height: 400px;
-            width: 500px;
-            max-width: 500px;
+            height: 1000px;
+            max-height: 1000px;
+            width: 1000px;
+            max-width: 1000px;
         }
     </style>
 </head>
 <body>
     <h1>MarkSync</h1>
     <div class="container">
-        <div class="files-sidebar">
-            <h2>Мои файлы</h2>
-            <input type="text" id="fileSearch" class="search-box" placeholder="Поиск файлов..." />
-            <div class="files-list">
-                <ul id="filesList">
-                    <!-- Список файлов будет добавляться здесь динамически -->
-                    {% if files %}
-                        {% for file in files %}
-                            <li data-file-path="{{ file.path }}">{{ file.name }}</li>
-                        {% endfor %}
-                    {% endif %}
-                </ul>
-            </div>
-            <div class="files-actions">
-                <button onclick="refreshFilesList()">Обновить</button>
-            </div>
+        <div class="file-explorer">
+            <h2>Заметки</h2>
+            <ul id="noteList">
+                {% for note in files %}
+                    <li onclick="loadNote('{{ note.name }}', `{{ note.text|e }}`)">{{ note.name }}</li>
+                {% endfor %}
+            </ul>
+
+            <hr>
+
+            <h2>Файловый менеджер</h2>
+            <div id="currentPath">Текущий путь:</div>
+            <input type="text" id="folderName" placeholder="Поиск или имя папки" oninput="searchFiles()" />
+            <button onclick="createFolder()">Создать папку</button>
+            <ul id="fileList"></ul>
+            <ul id="searchResults" style="display: none;"></ul>
         </div>
 
-        <form method="POST" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="form-container">
             <input type="text" id="filename" placeholder="Введите имя файла" style="margin-top: 10px; padding: 10px;" />
-
             <div class="text-editor">
                 <textarea id="markdownEditor" name="text" placeholder="Введите ваш Markdown здесь...">{{ text }}</textarea>
             </div>
-
             <div style="display: flex; gap: 10px;">
-                <button type="submit">Предпросмотр</button>
-                <button type="button" onclick="saveToServer()">Сохранить</button>
-                <button type="button" onclick="saveFile()">Скачать</button>
-                <button type="button" onclick="document.getElementById('fileInput').click()">Загрузить</button>
-                <button type="button" onclick="insertDiagramTemplate()">Вставить диаграмму</button>
+                <button type="button" onclick="previewMarkdown()">Предпросмотр</button>
+                <select id="saveFormat">
+                    <option value="md">Markdown (.md)</option>
+                    <option value="pdf">PDF (.pdf)</option>
+                </select>
+                <button type="button" onclick="saveNote()">Сохранить</button>
+                <button type="button" onclick="insertTaskTemplate()">Задача</button>
+                <button type="button" onclick="insertDiagramTemplate()">Диаграмма</button>
             </div>
-            <input type="file" id="fileInput" style="display: none;" accept=".md" onchange="loadFile(event)" />
-        </form>
+        </div>
 
-        <div class="preview" style="flex:1;">
+        <div class="preview-area">
             <h2>Предпросмотр</h2>
-            <div>{{ html|safe }}</div>
+            <div id="previewContent"></div>
         </div>
     </div>
 
     <script>
-        // Инициализация редактора CodeMirror
-        let editor;
-        document.addEventListener('DOMContentLoaded', function () {
-            editor = CodeMirror.fromTextArea(document.getElementById('markdownEditor'), {
-                mode: 'markdown',
-                lineNumbers: true,
-                theme: 'default',
-                lineWrapping: true,
-                autofocus: true,
-                fixedGutter: true,
-                viewportMargin: Infinity,
-                styleActiveLine: true,
-                height: "400px",
-                maxHeight: "400px",
-                scrollHorizontally: false
-            });
-            
-            document.querySelector('form').addEventListener('submit', function () {
-                const textarea = document.querySelector('textarea[name=text]');
-                textarea.value = editor.getValue();
-            });
-            
-            // Обработчики для списка файлов
-            setupFilesList();
+        let currentDirectory = '.';
+        const editorElement = CodeMirror.fromTextArea(document.getElementById('markdownEditor'), {
+            mode: 'markdown',
+            lineNumbers: true,
+            theme: 'default',
+            lineWrapping: true,
+            autofocus: true,
+            fixedGutter: true,
+            viewportMargin: Infinity,
+            styleActiveLine: true,
+            height: "400px",
+            maxHeight: "400px",
+            scrollHorizontally: false
         });
+        window.editor = editorElement;
 
-        // Настройка обработчиков для списка файлов
-        function setupFilesList() {
-            const filesList = document.getElementById('filesList');
-            
-            // Обработчик клика по файлу
-            filesList.addEventListener('click', function(e) {
-                if (e.target.tagName === 'LI') {
-                    // Удаляем активный класс у всех элементов
-                    document.querySelectorAll('#filesList li').forEach(li => {
-                        li.classList.remove('active');
-                    });
-                    
-                    // Добавляем активный класс к выбранному элементу
-                    e.target.classList.add('active');
-                    
-                    // Загружаем файл
-                    loadFileFromServer(e.target.dataset.filePath);
-                }
-            });
+        function loadNote(title, content) {
+            document.getElementById('filename').value = title;
+            editor.setValue(content);
         }
 
-        // Загрузка файла с сервера
-        function loadFileFromServer(filePath) {
-            fetch(`/load_file?path=${encodeURIComponent(filePath)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.content) {
-                        editor.setValue(data.content);
-                        document.getElementById('filename').value = data.name.replace('.md', '');
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка при загрузке файла:', error);
-                });
+        function insertTaskTemplate() {
+            const template = '<t>Новая задача</t>';
+            const cursor = editor.getCursor();
+            editor.replaceRange(template, cursor);
+            editor.focus();
         }
 
-        // Обновление списка файлов
-        function refreshFilesList() {
-            fetch('/get_files')
-                .then(response => response.json())
-                .then(files => {
-                    const filesList = document.getElementById('filesList');
-                    filesList.innerHTML = '';
-                    
-                    files.forEach(file => {
-                        const li = document.createElement('li');
-                        li.textContent = file.name;
-                        li.dataset.filePath = file.path;
-                        filesList.appendChild(li);
-                    });
-                })
-                .catch(error => {
-                    console.error('Ошибка при обновлении списка файлов:', error);
-                });
-        }
-
-        // Поиск файлов
-        document.getElementById('fileSearch').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            document.querySelectorAll('#filesList li').forEach(li => {
-                const fileName = li.textContent.toLowerCase();
-                if (fileName.includes(searchTerm)) {
-                    li.style.display = 'block';
-                } else {
-                    li.style.display = 'none';
-                }
-            });
-        });
-
-        // Функция для сохранения на сервер
-        function saveToServer() {
-            const filename = document.getElementById('filename').value.trim();
-            const text = editor.getValue();
-
-            if (!filename) {
-                alert("Пожалуйста, введите имя файла.");
-                return;
-            }
-
-            // Создаем FormData для отправки данных
-            const formData = new FormData();
-            formData.append('filename', filename);
-            formData.append('text', text);
-
-            // Отправляем запрос на сервер
-            fetch('/save_on_server', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.status === 200) {
-                    alert('Файл успешно сохранен на сервере');
-                    refreshFilesList(); // Обновляем список файлов
-                } else {
-                    alert('Ошибка при сохранении файла');
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Произошла ошибка при сохранении');
-            });
-        }
-
-        // Функция для скачивания файла
-        function saveFile() {
-            const filename = document.getElementById('filename').value.trim();
-            const text = editor.getValue();
-
-            if (filename) {
-                const blob = new Blob([text], { type: 'text/markdown' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `${filename}.md`;
-                link.click();
-            } else {
-                alert("Пожалуйста, введите имя файла.");
-            }
-        }
-
-        // Функция для загрузки файла
-        function loadFile(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    editor.setValue(e.target.result);
-                    document.getElementById('filename').value = file.name.replace('.md', '');
-                };
-                reader.readAsText(file);
-            }
-        }
-
-        // Функция для вставки шаблона диаграммы
         function insertDiagramTemplate() {
             const template = `<d>
 {
   type: 'bar',
   data: {
-    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-    datasets: [{
-      label: 'Users',
-      data: [50, 60, 70, 180]
-    }, {
-      label: 'Revenue',
-      data: [100, 200, 300, 400]
-    }]
+    labels: ['Q1', 'Q2'],
+    datasets: [{ label: 'Data', data: [10, 20] }]
   }
 }
 </d>`;
-
             const cursor = editor.getCursor();
             editor.replaceRange(template, cursor);
-            const newCursorPos = cursor.ch + template.indexOf('{');
-            editor.setCursor({ line: cursor.line, ch: newCursorPos });
+            editor.setCursor({ line: cursor.line + 2, ch: 4 });
             editor.focus();
         }
+
+        function previewMarkdown() {
+            const text = editor.getValue();
+            if (!text) {
+                alert("Введите текст для предпросмотра");
+                return;
+            }
+
+            fetch('/preview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('previewContent').innerHTML = data.html;
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Не удалось получить предпросмотр');
+            });
+        }
+
+        function saveNote() {
+            const filename = document.getElementById('filename').value.trim();
+            const text = editor.getValue();
+
+            if (!filename || !text) {
+                alert("Имя файла и текст обязательны.");
+                return;
+            }
+
+            fetch('/save_on_server', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `filename=${encodeURIComponent(filename)}&text=${encodeURIComponent(text)}`
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    alert("Заметка сохранена!");
+                    renderNotesList(); // обновляем список
+                } else {
+                    alert("Ошибка при сохранении.");
+                }
+            });
+        }
+
+        function renderNotesList() {
+            fetch('/api/notes')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('noteList');
+                    list.innerHTML = '';
+                    data.notes.forEach(note => {
+                        const li = document.createElement('li');
+                        li.textContent = note.name;
+                        li.onclick = () => loadNote(note.name, note.text);
+                        list.appendChild(li);
+                    });
+                });
+        }
+
+        function updateCurrentPath() {
+            document.getElementById('currentPath').textContent = `Текущий путь: ${currentDirectory}`;
+        }
+
+        function renderFileList() {
+            fetch('/list_files', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `directory=${encodeURIComponent(currentDirectory)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const fileList = document.getElementById('fileList');
+                fileList.innerHTML = '';
+                if (currentDirectory !== '.') {
+                    const backLi = document.createElement('li');
+                    backLi.textContent = '.. (Назад)';
+                    backLi.style.fontWeight = 'bold';
+                    backLi.onclick = () => navigateToFolder('..');
+                    fileList.appendChild(backLi);
+                }
+                data.files.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    if (item.startsWith('\\')) {
+                        li.style.fontWeight = 'bold';
+                        li.onclick = () => navigateToFolder(item.slice(1));
+                    } else {
+                        li.onclick = () => loadFileFromList(item);
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Удалить';
+                        deleteButton.onclick = (e) => {
+                            e.stopPropagation();
+                            if (confirm(`Вы уверены, что хотите удалить "${item}"?`)) {
+                                deleteFileOrFolder(item);
+                            }
+                        };
+                        li.appendChild(deleteButton);
+                    }
+                    fileList.appendChild(li);
+                });
+            });
+        }
+
+        function navigateToFolder(folderName) {
+            if (folderName === '..') {
+                currentDirectory = currentDirectory.split('/').slice(0, -1).join('/') || '.';
+            } else {
+                currentDirectory = `${currentDirectory}/${folderName}`.replace('//', '/');
+            }
+            renderFileList();
+            updateCurrentPath();
+        }
+
+        function loadFileFromList(fileName) {
+            fetch('/load', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `filename=${encodeURIComponent(`${currentDirectory}/${fileName}`)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.text) {
+                    editor.setValue(data.text);
+                    document.getElementById('filename').value = fileName.replace(/\.md$/, '');
+                } else {
+                    alert(data.message || "Ошибка загрузки файла.");
+                }
+            });
+        }
+
+        function saveFile() {
+            const filename = document.getElementById('filename').value.trim();
+            const format = document.getElementById('saveFormat').value;
+            const text = editor.getValue();
+            if (filename) {
+                if (format === 'md') {
+                    fetch('/save', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `filename=${encodeURIComponent(filename)}&text=${encodeURIComponent(text)}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message || "Ошибка сохранения файла.");
+                    });
+                } else if (format === 'pdf') {
+                    const previewDiv = document.querySelector('.preview div');
+                    if (!previewDiv) {
+                        alert("Предпросмотр недоступен. Пожалуйста, нажмите 'Предпросмотр' перед сохранением в PDF.");
+                        return;
+                    }
+                    const html = previewDiv.innerHTML;
+                    if (!html.trim()) {
+                        alert("HTML-контент отсутствует. Пожалуйста, нажмите 'Предпросмотр' перед сохранением в PDF.");
+                        return;
+                    }
+                    fetch('/save_pdf', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `filename=${encodeURIComponent(filename)}&html=${encodeURIComponent(html)}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message || "Ошибка сохранения файла.");
+                    });
+                }
+            } else {
+                alert("Пожалуйста, введите имя файла.");
+            }
+        }
+
+        function deleteFileOrFolder(name) {
+            fetch('/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `path=${encodeURIComponent(`${currentDirectory}/${name}`)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    renderFileList();
+                } else {
+                    alert(data.error || "Ошибка удаления.");
+                }
+            });
+        }
+
+        function createFolder() {
+            const folderName = document.getElementById('folderName').value.trim();
+            if (folderName) {
+                fetch('/create_folder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `folder_name=${encodeURIComponent(folderName)}&directory=${encodeURIComponent(currentDirectory)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        renderFileList();
+                    } else {
+                        alert(data.error || "Ошибка создания папки.");
+                    }
+                });
+            }
+        }
+
+        function searchFiles() {
+            const query = document.getElementById('folderName').value.trim().toLowerCase();
+            const fileList = document.getElementById('fileList');
+            const searchResults = document.getElementById('searchResults');
+            if (!query) {
+                searchResults.style.display = 'none';
+                fileList.style.display = 'block';
+                return;
+            }
+            searchResults.innerHTML = '';
+            searchResults.style.display = 'block';
+            fileList.style.display = 'none';
+            fetch('/list_files', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `directory=${encodeURIComponent(currentDirectory)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                data.files.forEach(item => {
+                    if (item.toLowerCase().includes(query)) {
+                        const li = document.createElement('li');
+                        li.textContent = item;
+                        if (item.startsWith('\\')) {
+                            li.style.fontWeight = 'bold';
+                            li.onclick = () => navigateToFolder(item.slice(1));
+                        } else {
+                            li.onclick = () => loadFileFromList(item);
+                        }
+                        searchResults.appendChild(li);
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateCurrentPath();
+            renderFileList();
+            renderNotesList();
+        });
     </script>
 </body>
 </html>
