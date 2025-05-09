@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = event => {
+                    console.log("Данные аудио получены:", event.data); // Отладочный вывод
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstart = () => {
+                    console.log("Запись началась."); // Отладочный вывод
+                };
+
+                mediaRecorder.onstop = async () => {
+                    console.log("Запись остановлена."); // Отладочный вывод
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    console.log("Создан Blob аудио:", audioBlob); // Отладочный вывод
+                    audioChunks = []; // Очистка данных
+                    uploadAudio(audioBlob);
+                };
+
+                mediaRecorder.start();
+            } catch (error) {
+                console.error("Ошибка при доступе к микрофону:", error);
+                alert("Не удалось получить доступ к микрофону. Проверьте настройки.");
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+            } else {
+                console.error("Запись не была начата.");
+            }
+        }
+
+        async function uploadAudio(audioBlob) {
+            const formData = new FormData();
+            formData.append("audio", audioBlob, "recording.webm");
+
+            for (let pair of formData.entries()) {
+                console.log(pair[0], pair[1]);  // 🔍 Проверка, что файл действительно добавлен
+            }
+
+            try {
+                const response = await fetch('/record_voice_message', {
+                    method: "POST",
+                    body: formData  // ✅ НЕ добавляй заголовок Content-Type вручную!
+                });
+
+                const result = await response.json();
+                console.log("Результат:", result);
+                document.getElementById('transcription').innerText = result.transcription || 'Ошибка транскрипции';
+            } catch (error) {
+                console.error("Ошибка отправки:", error);
+                document.getElementById('transcription').innerText = 'Ошибка при отправке файла.';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <button onclick="startRecording()">Начать запись</button>
+    <button onclick="stopRecording()">Остановить запись</button>
+
+    <h2>Результат транскрипции:</h2>
+    <p id="transcription">Здесь появится текст...</p>
+</body>
+</html>

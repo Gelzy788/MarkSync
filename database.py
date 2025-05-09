@@ -22,4 +22,13 @@ def login_user_db(email, password):
         return 'Вы успешно вошли в аккаунт!', 'success'
     else:
         return "Пользователь не найден"
-    
+
+def add_voice_message(user_id, filename, text, duration):
+    new_message = VoiceMessages(user_id=user_id, filename=filename, text=text, duration=duration)
+    db.session.add(new_message)
+    try:
+        db.session.commit()
+        return 500
+    except Exception as e:
+        print("ERROR", e)
+        return 401

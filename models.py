@@ -35,3 +35,13 @@ class NotesAccess(db.Model):
         'notes.ID'))
     user_id = db.Column(db.Integer(), db.ForeignKey(
         'user.ID'))
+
+class VoiceMessages(db.Model):
+    __tablename__ = 'voice_messages'
+    ID = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey(
+        'users.ID'))
+    filename = db.Column(db.String(255), nullable=False)
+    date = db.Column(db.DateTime(), default=datetime.utcnow)
+    text = db.Column(db.Text(), nullable=True)
+    duration = db.Column(db.Integer(), nullable=True)
