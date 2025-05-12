@@ -1,10 +1,8 @@
-
 from autorisation import *
 from config import *
 from data.__all_models import *
 from forms.register_form import *
 from data import auth_blueprint, notes_blueprint
-# from main import main_blueprint
 from utils import convert_diagrams, convert_tasks
 import markdown2
 

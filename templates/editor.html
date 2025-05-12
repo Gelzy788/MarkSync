@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarkSync</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/markdown/markdown.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css " />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css " />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/markdown/markdown.min.js "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -41,75 +43,22 @@
             margin: 5px 0;
             cursor: pointer;
         }
-        textarea {
-            width: 100%;
-            height: 100%;
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .tabs button {
+            padding: 10px 20px;
+            background-color: #fff;
+            color: #000;
             border: 1px solid #ccc;
-            background-color: #222;
-            color: #fff;
-            padding: 10px;
-            resize: none;
+            cursor: pointer;
+            font-weight: bold;
         }
-        .preview {
-            width: 100%;
-            height: 100%;
-            border: 1px solid #666;
-            background-color: #333;
-            padding: 10px;
-            overflow-y: auto;
-        }
-        button {
-            margin: 10px;
-            padding: 10px 15px;
+        .tabs button.active {
             background-color: #007BFF;
             color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .chart-container {
-            margin: 20px 0;
-            text-align: center;
-        }
-        .chart-image {
-            max-width: 100%;
-            border: 1px solid #444;
-            background: white;
-            padding: 10px;
-        }
-        .chart-error {
-            color: red;
-            padding: 10px;
-            border: 1px dashed red;
-        }
-        textarea {
-            font-family: 'Courier New', monospace;
-            white-space: pre;
-            tab-size: 2;
-        }
-        .chart-container img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-        }
-        .diagram-source {
-            background-color: #222;
-            color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            white-space: pre-wrap;
-            tab-size: 2;
-            display: block;
-        }
-        .form-container {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            height: 100%;
         }
         .text-editor {
             flex: 1;
@@ -120,10 +69,8 @@
             color: #fff;
             padding: 10px;
             margin-bottom: 10px;
-            height: 400px;
-            max-height: 400px;
-            width: 800px;
-            max-width: 800px;
+            height: 600px;
+            max-height: 600px;
         }
         .text-editor .CodeMirror {
             height: 100%;
@@ -138,16 +85,26 @@
             background-color: #333;
             color: #fff;
             padding: 10px;
-            height: 1000px;
-            max-height: 1000px;
-            width: 1000px;
-            max-width: 1000px;
+            height: 400px;
+            max-height: 400px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
     <h1>MarkSync</h1>
     <div class="container">
+        <!-- Левая панель: Заметки + Файловый менеджер -->
         <div class="file-explorer">
             <h2>Заметки</h2>
             <ul id="noteList">
@@ -155,9 +112,7 @@
                     <li onclick="loadNote('{{ note.name }}', `{{ note.text|e }}`)">{{ note.name }}</li>
                 {% endfor %}
             </ul>
-
             <hr>
-
             <h2>Файловый менеджер</h2>
             <div id="currentPath">Текущий путь:</div>
             <input type="text" id="folderName" placeholder="Поиск или имя папки" oninput="searchFiles()" />
@@ -166,26 +121,40 @@
             <ul id="searchResults" style="display: none;"></ul>
         </div>
 
-        <div class="form-container">
+        <!-- Центральная часть: Редактор или Предпросмотр -->
+        <div class="main-content" style="flex: 1; display: flex; flex-direction: column;">
             <input type="text" id="filename" placeholder="Введите имя файла" style="margin-top: 10px; padding: 10px;" />
-            <div class="text-editor">
-                <textarea id="markdownEditor" name="text" placeholder="Введите ваш Markdown здесь...">{{ text }}</textarea>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button type="button" onclick="previewMarkdown()">Предпросмотр</button>
-                <select id="saveFormat">
-                    <option value="md">Markdown (.md)</option>
-                    <option value="pdf">PDF (.pdf)</option>
-                </select>
-                <button type="button" onclick="saveNote()">Сохранить</button>
-                <button type="button" onclick="insertTaskTemplate()">Задача</button>
-                <button type="button" onclick="insertDiagramTemplate()">Диаграмма</button>
-            </div>
-        </div>
 
-        <div class="preview-area">
-            <h2>Предпросмотр</h2>
-            <div id="previewContent"></div>
+            <!-- Кнопки переключения -->
+            <div class="tabs">
+                <button id="edit-tab" onclick="toggleEditor()" class="active">Редактировать</button>
+                <button id="preview-tab" onclick="togglePreview()">Предпросмотр</button>
+            </div>
+
+            <!-- Редактор Markdown -->
+            <div id="editor-section" style="display: block;">
+                <div class="text-editor">
+                    <textarea id="markdownEditor" name="text">{{ text }}</textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select id="downloadFormat">
+                        <option value="md">Markdown (.md)</option>
+                        <option value="txt">Текст (.txt)</option>
+                        <option value="html">HTML (.html)</option>
+                        <option value="pdf">PDF (.pdf)</option>
+                    </select>
+                    <button type="button" onclick="saveNote()">Сохранить</button>
+                    <button type="button" onclick="downloadFile()">Скачать</button>
+                    <button type="button" onclick="insertTaskTemplate()">Задача</button>
+                    <button type="button" onclick="insertDiagramTemplate()">Диаграмма</button>
+                </div>
+            </div>
+
+            <!-- Блок предпросмотра -->
+            <div id="preview-section" style="display: none; flex: 1; overflow-y: auto;">
+                <h2>Предпросмотр</h2>
+                <div id="previewContent"></div>
+            </div>
         </div>
     </div>
 
@@ -234,13 +203,27 @@
             editor.focus();
         }
 
+        function toggleEditor() {
+            document.getElementById('edit-tab').classList.add('active');
+            document.getElementById('preview-tab').classList.remove('active');
+            document.getElementById('editor-section').style.display = 'block';
+            document.getElementById('preview-section').style.display = 'none';
+        }
+
+        function togglePreview() {
+            document.getElementById('edit-tab').classList.remove('active');
+            document.getElementById('preview-tab').classList.add('active');
+            document.getElementById('editor-section').style.display = 'none';
+            document.getElementById('preview-section').style.display = 'block';
+            previewMarkdown(); // Автоматически обновляем предпросмотр
+        }
+
         function previewMarkdown() {
             const text = editor.getValue();
             if (!text) {
                 alert("Введите текст для предпросмотра");
                 return;
             }
-
             fetch('/preview', {
                 method: 'POST',
                 headers: {
@@ -277,7 +260,7 @@
             .then(response => {
                 if (response.status === 200) {
                     alert("Заметка сохранена!");
-                    renderNotesList(); // обновляем список
+                    renderNotesList();
                 } else {
                     alert("Ошибка при сохранении.");
                 }
@@ -378,9 +361,7 @@
                 if (format === 'md') {
                     fetch('/save', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: `filename=${encodeURIComponent(filename)}&text=${encodeURIComponent(text)}`
                     })
                     .then(response => response.json())
@@ -388,21 +369,14 @@
                         alert(data.message || "Ошибка сохранения файла.");
                     });
                 } else if (format === 'pdf') {
-                    const previewDiv = document.querySelector('.preview div');
-                    if (!previewDiv) {
-                        alert("Предпросмотр недоступен. Пожалуйста, нажмите 'Предпросмотр' перед сохранением в PDF.");
-                        return;
-                    }
-                    const html = previewDiv.innerHTML;
+                    const html = document.getElementById('previewContent').innerHTML;
                     if (!html.trim()) {
                         alert("HTML-контент отсутствует. Пожалуйста, нажмите 'Предпросмотр' перед сохранением в PDF.");
                         return;
                     }
                     fetch('/save_pdf', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: `filename=${encodeURIComponent(filename)}&html=${encodeURIComponent(html)}`
                     })
                     .then(response => response.json())
@@ -418,9 +392,7 @@
         function deleteFileOrFolder(name) {
             fetch('/delete', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `path=${encodeURIComponent(`${currentDirectory}/${name}`)}`
             })
             .then(response => response.json())
@@ -439,9 +411,7 @@
             if (folderName) {
                 fetch('/create_folder', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: `folder_name=${encodeURIComponent(folderName)}&directory=${encodeURIComponent(currentDirectory)}`
                 })
                 .then(response => response.json())
@@ -455,6 +425,172 @@
                 });
             }
         }
+
+        async function exportToPDF() {
+            const filename = document.getElementById('filename').value.trim();
+            const text = editor.getValue();
+
+            if (!filename || !text) {
+                alert("Введите имя файла и текст.");
+                return;
+            }
+
+            const response = await fetch('/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            const data = await response.json();
+            if (!data.html) {
+                alert("Ошибка при создании HTML.");
+                return;
+            }
+
+            const fullPreview = document.createElement('div');
+            fullPreview.innerHTML = data.html;
+            fullPreview.style.position = 'absolute';
+            fullPreview.style.left = '-9999px';
+            fullPreview.style.top = 0;
+            fullPreview.style.width = '800px';
+            fullPreview.style.backgroundColor = '#000';
+            fullPreview.style.overflow = 'visible';
+            fullPreview.style.maxHeight = 'none';
+            document.body.appendChild(fullPreview);
+
+            setTimeout(async () => {
+                try {
+                    const scale = 2;
+                    const pdfWidth = 210;
+                    const pdfHeight = 297;
+                    const pageHeightPx = 1123;
+                    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+
+                    const contentHeight = fullPreview.scrollHeight;
+                    const totalPages = Math.ceil(contentHeight / pageHeightPx);
+
+                    for (let i = 0; i < totalPages; i++) {
+                        const pageDiv = document.createElement('div');
+                        pageDiv.style.position = 'absolute';
+                        pageDiv.style.left = '-9999px';
+                        pageDiv.style.top = 0;
+                        pageDiv.style.width = '800px';
+                        pageDiv.style.backgroundColor = '#000';
+                        pageDiv.style.overflow = 'hidden';
+                        pageDiv.style.height = `${pageHeightPx}px`;
+                        pageDiv.style.webkitTransform = `translateY(${-i * pageHeightPx}px)`;
+                        pageDiv.style.transform = `translateY(${-i * pageHeightPx}px)`;
+
+                        pageDiv.innerHTML = fullPreview.innerHTML;
+                        pageDiv.style.clipPath = `inset(${i * pageHeightPx}px 0 ${Math.max(0, contentHeight - (i + 1) * pageHeightPx)}px 0)`;
+
+                        document.body.appendChild(pageDiv);
+
+                        const canvas = await html2canvas(pageDiv, {
+                            scale: scale,
+                            backgroundColor: '#000',
+                            scrollY: 0,
+                            windowHeight: pageHeightPx
+                        });
+
+                        const imgData = canvas.toDataURL('image/png');
+
+                        if (i > 0) pdf.addPage();
+
+                        const widthRatio = pdfWidth / canvas.width;
+                        const imgHeight = canvas.height * widthRatio;
+
+                        pdf.setFillColor(0, 0, 0);
+                        pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
+                        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+
+                        document.body.removeChild(pageDiv);
+                    }
+
+                    document.body.removeChild(fullPreview);
+
+                    pdf.save(`${filename}.pdf`);
+
+                } catch (err) {
+                    console.error("Ошибка при создании PDF:", err);
+                    alert("Не удалось создать PDF.");
+                }
+            }, 1000);
+        }
+
+        function convertCanvasToImages(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const canvases = doc.querySelectorAll('canvas');
+    canvases.forEach(canvas => {
+        try {
+            const img = doc.createElement('img');
+            img.src = canvas.toDataURL('image/png');
+            img.style.maxWidth = '100%';
+            img.alt = 'Диаграмма';
+            canvas.parentNode.replaceChild(img, canvas);
+        } catch (e) {
+            console.error("Ошибка конвертации canvas:", e);
+        }
+    });
+
+    return doc.body.innerHTML;
+}
+
+        function downloadFile() {
+    const filename = document.getElementById('filename').value.trim();
+    const format = document.getElementById('downloadFormat').value;
+    const text = editor.getValue();
+
+    if (!filename || !text) {
+        alert("Введите имя файла и текст.");
+        return;
+    }
+
+    if (format === 'pdf') {
+        exportToPDF();
+        return;
+    }
+
+    let blob, extension;
+
+    switch (format) {
+        case 'md':
+            blob = new Blob([text], { type: 'text/markdown' });
+            extension = '.md';
+            break;
+        case 'txt':
+            blob = new Blob([text], { type: 'text/plain' });
+            extension = '.txt';
+            break;
+        case 'html':
+            const htmlContent = document.getElementById('previewContent').innerHTML;
+            if (!htmlContent.trim()) {
+                alert("HTML-контент отсутствует. Пожалуйста, нажмите 'Предпросмотр'.");
+                return;
+            }
+            blob = new Blob([`
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><style>body{font-family:Arial;padding:20px}img{max-width:100%}</style></head>
+<body>${htmlContent}</body></html>`], { type: 'text/html' });
+            extension = '.html';
+            break;
+        default:
+            alert("Неизвестный формат");
+            return;
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}${extension}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
 
         function searchFiles() {
             const query = document.getElementById('folderName').value.trim().toLowerCase();
@@ -470,9 +606,7 @@
             fileList.style.display = 'none';
             fetch('/list_files', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `directory=${encodeURIComponent(currentDirectory)}`
             })
             .then(response => response.json())

@@ -1,20 +1,29 @@
-from flask import Blueprint, render_template, request, jsonify
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
-from reportlab.lib.styles import getSampleStyleSheet
+from flask import Blueprint, render_template, request, jsonify, Response
+from reportlab.platypus import Image as RLImage
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from bs4 import BeautifulSoup
 import os
-import base64
-import tempfile
 import traceback
-from io import BytesIO
-
+from urllib.parse import quote
+import re
+from pdf_utils import generate_pdf
 from . import notes_blueprint
 from utils import markdown_to_html, convert_tasks, convert_diagrams
 
-pdfmetrics.registerFont(TTFont('DejaVuSans', 'data/dejavu-sans/DejaVuSans.ttf'))
+
+try:
+    pdfmetrics.getFont('DejaVuSans')
+except Exception:
+    font_path = 'data/dejavu-sans/DejaVuSans.ttf'
+    if os.path.exists(font_path):
+        pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
+    else:
+        print("Шрифт не найден:", font_path)
+
+def encode_filename(filename):
+    """Кодируем имя файла для заголовка Content-Disposition"""
+    safe_filename = re.sub(r'[^\w\.\-\_]', '_', filename)
+    return quote(safe_filename)
 
 @notes_blueprint.route('/editor', methods=['GET', 'POST'])
 def editor():
@@ -41,35 +50,25 @@ def save_file():
 def save_pdf():
     filename = request.form.get('filename')
     html_content = request.form.get('html')
+
     if not filename or not html_content:
         return jsonify({"error": "Файл или HTML-контент отсутствует."}), 400
+
     try:
-        pdf_path = filename
-        doc = SimpleDocTemplate(pdf_path, pagesize=letter)
-        styles = getSampleStyleSheet()
-        normal_style = styles['Normal']
-        normal_style.fontName = 'DejaVuSans'
-        normal_style.fontSize = 12
-        story = []
-        soup = BeautifulSoup(html_content, 'html.parser')
-        for element in soup:
-            if element.name == 'img' and element.get('src', '').startswith('data:image'):
-                image_data = element['src'].split(',')[1]
-                image_bytes = base64.b64decode(image_data)
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-                    temp_file.write(image_bytes)
-                    temp_file_path = temp_file.name
-                story.append(RLImage(temp_file_path, width=400, height=300))
-                story.append(Spacer(1, 12))
-                os.unlink(temp_file_path)
-            elif element.string:
-                story.append(Paragraph(element.string.strip(), normal_style))
-                story.append(Spacer(1, 12))
-        doc.build(story)
-        return jsonify({"message": f"Файл '{filename}' успешно сохранён в формате PDF!"})
+        processed_html = convert_diagrams(html_content)
+        pdf_data = generate_pdf(processed_html)
+        encoded_filename = encode_filename(filename)
+        return Response(
+            pdf_data,
+            mimetype='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="{encoded_filename}.pdf"; filename*=UTF-8\'\'{encoded_filename}.pdf'
+            }
+        )
+
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'error': str(e)}), 500
 
 @notes_blueprint.route('/load', methods=['POST'])
 def load_file():
