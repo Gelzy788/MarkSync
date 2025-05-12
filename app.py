@@ -43,21 +43,6 @@ def marks(user):
     return render_template('editor.html', text=text, html=html, files=files)
 
 
-@app.route('/save_on_server', methods=['POST'])
-@token_required
-def save_on_server(user):
-    filename = request.form['filename']
-    text = request.form['text']
-    new_note = Notes(name=filename, text=text, user_id=user.ID)
-    db.session.add(new_note)
-    try:
-        db.session.commit()
-        return jsonify({'status': 'success', 'message': 'Заметка сохранена'}), 200
-    except Exception as e:
-        print("ERROR", e)
-        return jsonify({'status': 'error', 'message': 'Ошибка сохранения'}), 500
-
-
 @app.route('/preview', methods=['POST'])
 @token_required
 def preview(user):
@@ -75,6 +60,28 @@ def api_notes(user):
     notes = Notes.query.filter_by(user_id=user.ID).all()
     return jsonify({'notes': [{'name': note.name, 'text': note.text} for note in notes]})
 
+
+@app.route('/save_on_server', methods=['POST'])
+@token_required
+def save_on_server(user):
+    filename = request.form['filename']
+    text = request.form['text']
+    existing_note = Notes.query.filter_by(name=filename, user_id=user.ID).first()
+    
+    if existing_note:
+        existing_note.text = text
+    else:
+        new_note = Notes(name=filename, text=text, user_id=user.ID)
+        db.session.add(new_note)
+    
+    try:
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Заметка сохранена'}), 200
+    except Exception as e:
+        print("ERROR", e)
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': 'Ошибка сохранения'}), 500
+    
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
