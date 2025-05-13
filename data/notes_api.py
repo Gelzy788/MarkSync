@@ -6,7 +6,6 @@ import os
 import traceback
 from urllib.parse import quote
 import re
-from pdf_utils import generate_pdf
 from . import notes_blueprint
 from utils import markdown_to_html, convert_tasks, convert_diagrams
 
@@ -45,30 +44,6 @@ def save_file():
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(text)
     return jsonify({"message": f"Файл '{filename}' сохранён!"})
-
-@notes_blueprint.route('/save_pdf', methods=['POST'])
-def save_pdf():
-    filename = request.form.get('filename')
-    html_content = request.form.get('html')
-
-    if not filename or not html_content:
-        return jsonify({"error": "Файл или HTML-контент отсутствует."}), 400
-
-    try:
-        processed_html = convert_diagrams(html_content)
-        pdf_data = generate_pdf(processed_html)
-        encoded_filename = encode_filename(filename)
-        return Response(
-            pdf_data,
-            mimetype='application/pdf',
-            headers={
-                'Content-Disposition': f'attachment; filename="{encoded_filename}.pdf"; filename*=UTF-8\'\'{encoded_filename}.pdf'
-            }
-        )
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
 
 @notes_blueprint.route('/load', methods=['POST'])
 def load_file():

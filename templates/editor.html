@@ -106,7 +106,10 @@
     <div class="container">
         <!-- Левая панель: Заметки + Файловый менеджер -->
         <div class="file-explorer">
-            <h2>Заметки</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Заметки</h2>
+                <button type="button" onclick="createNewNote()" style="padding: 5px 10px; font-size: 14px;">Создать</button>
+            </div>
             <ul id="noteList">
                 {% for note in files %}
                     <li onclick="loadNote('{{ note.name }}', `{{ note.text|e }}`)">{{ note.name }}</li>
@@ -201,6 +204,11 @@
             editor.replaceRange(template, cursor);
             editor.setCursor({ line: cursor.line + 2, ch: 4 });
             editor.focus();
+        }
+        
+        function createNewNote() {
+            document.getElementById('filename').value = ''; // Очистить имя файла
+            editor.setValue(''); // Очистить редактор Markdown
         }
 
         function toggleEditor() {
@@ -426,97 +434,108 @@
             }
         }
 
-        async function exportToPDF() {
-            const filename = document.getElementById('filename').value.trim();
-            const text = editor.getValue();
+async function exportToPDF() {
+    const filename = document.getElementById('filename').value.trim();
+    const text = editor.getValue();
 
-            if (!filename || !text) {
-                alert("Введите имя файла и текст.");
-                return;
+    if (!filename || !text) {
+        alert("Введите имя файла и текст.");
+        return;
+    }
+
+    // 1. Получаем HTML через /preview
+    const response = await fetch('/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+    });
+
+    const data = await response.json();
+    if (!data.html) {
+        alert("Ошибка при создании HTML.");
+        return;
+    }
+
+    // 2. Создаём временный div
+    const previewDiv = document.createElement('div');
+    previewDiv.innerHTML = data.html;
+    previewDiv.style.position = 'absolute';
+    previewDiv.style.left = '-9999px';
+    previewDiv.style.top = 0;
+    previewDiv.style.width = '800px'; // ~ширина A4 при масштабе 2x
+    previewDiv.style.backgroundColor = '#000';
+    previewDiv.style.overflow = 'visible';
+    previewDiv.style.maxHeight = 'none';
+    document.body.appendChild(previewDiv);
+
+    // Ждём, чтобы всё прогрузилось
+    setTimeout(async () => {
+        try {
+            // Параметры страницы
+            const pageHeight = 1123; // Высота A4 в px при масштабе 1x (~1123px)
+            const scale = 2;         // Масштабирование — качество vs производительность
+            const pdfWidth = 210;    // A4 ширина в мм
+            const pdfHeight = 297;   // A4 высота в мм
+
+            const fullHeight = previewDiv.scrollHeight;
+            const totalPages = Math.ceil(fullHeight / pageHeight);
+            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+
+            for (let i = 0; i < totalPages; i++) {
+                // Создаём новый div для текущей страницы
+                const pageDiv = document.createElement('div');
+                pageDiv.style.position = 'absolute';
+                pageDiv.style.left = '-9999px';
+                pageDiv.style.top = 0;
+                pageDiv.style.width = '800px';
+                pageDiv.style.height = `${pageHeight}px`;
+                pageDiv.style.backgroundColor = '#000';
+                pageDiv.style.overflow = 'hidden';
+
+                // Копируем полный HTML
+                pageDiv.innerHTML = previewDiv.innerHTML;
+
+                // Обрезаем нужную часть через CSS clipPath
+                pageDiv.style.clipPath = `inset(${i * pageHeight}px 0 ${Math.max(0, fullHeight - (i + 1) * pageHeight)}px 0)`;
+
+                document.body.appendChild(pageDiv);
+
+                // Делаем скриншот
+                const canvas = await html2canvas(pageDiv, {
+                    scale: scale,
+                    backgroundColor: '#000',
+                    scrollY: 0,
+                    windowHeight: pageHeight
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+
+                // Первая страница уже создана, остальные добавляем через addPage()
+                if (i > 0) pdf.addPage();
+
+                const widthRatio = pdfWidth / canvas.width;
+                const imgHeight = canvas.height * widthRatio;
+
+                pdf.setFillColor(0, 0, 0);
+                pdf.rect(0, 0, pdfWidth, pdfHeight, 'F'); // Чёрный фон
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+
+                // Очищаем DOM
+                document.body.removeChild(pageDiv);
             }
 
-            const response = await fetch('/preview', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
-            });
+            // Очищаем основной временный div
+            document.body.removeChild(previewDiv);
 
-            const data = await response.json();
-            if (!data.html) {
-                alert("Ошибка при создании HTML.");
-                return;
-            }
+            // Сохраняем PDF
+            pdf.save(`${filename}.pdf`);
 
-            const fullPreview = document.createElement('div');
-            fullPreview.innerHTML = data.html;
-            fullPreview.style.position = 'absolute';
-            fullPreview.style.left = '-9999px';
-            fullPreview.style.top = 0;
-            fullPreview.style.width = '800px';
-            fullPreview.style.backgroundColor = '#000';
-            fullPreview.style.overflow = 'visible';
-            fullPreview.style.maxHeight = 'none';
-            document.body.appendChild(fullPreview);
-
-            setTimeout(async () => {
-                try {
-                    const scale = 2;
-                    const pdfWidth = 210;
-                    const pdfHeight = 297;
-                    const pageHeightPx = 1123;
-                    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-
-                    const contentHeight = fullPreview.scrollHeight;
-                    const totalPages = Math.ceil(contentHeight / pageHeightPx);
-
-                    for (let i = 0; i < totalPages; i++) {
-                        const pageDiv = document.createElement('div');
-                        pageDiv.style.position = 'absolute';
-                        pageDiv.style.left = '-9999px';
-                        pageDiv.style.top = 0;
-                        pageDiv.style.width = '800px';
-                        pageDiv.style.backgroundColor = '#000';
-                        pageDiv.style.overflow = 'hidden';
-                        pageDiv.style.height = `${pageHeightPx}px`;
-                        pageDiv.style.webkitTransform = `translateY(${-i * pageHeightPx}px)`;
-                        pageDiv.style.transform = `translateY(${-i * pageHeightPx}px)`;
-
-                        pageDiv.innerHTML = fullPreview.innerHTML;
-                        pageDiv.style.clipPath = `inset(${i * pageHeightPx}px 0 ${Math.max(0, contentHeight - (i + 1) * pageHeightPx)}px 0)`;
-
-                        document.body.appendChild(pageDiv);
-
-                        const canvas = await html2canvas(pageDiv, {
-                            scale: scale,
-                            backgroundColor: '#000',
-                            scrollY: 0,
-                            windowHeight: pageHeightPx
-                        });
-
-                        const imgData = canvas.toDataURL('image/png');
-
-                        if (i > 0) pdf.addPage();
-
-                        const widthRatio = pdfWidth / canvas.width;
-                        const imgHeight = canvas.height * widthRatio;
-
-                        pdf.setFillColor(0, 0, 0);
-                        pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
-                        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
-
-                        document.body.removeChild(pageDiv);
-                    }
-
-                    document.body.removeChild(fullPreview);
-
-                    pdf.save(`${filename}.pdf`);
-
-                } catch (err) {
-                    console.error("Ошибка при создании PDF:", err);
-                    alert("Не удалось создать PDF.");
-                }
-            }, 1000);
+        } catch (err) {
+            console.error("Ошибка при создании PDF:", err);
+            alert("Не удалось создать PDF.");
         }
+    }, 1000); // Можно увеличить при сложных диаграммах
+}
 
         function convertCanvasToImages(html) {
     const parser = new DOMParser();
