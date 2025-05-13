@@ -12,4 +12,3 @@ REFRESH_TOKEN_SECRET_KEY = 'c80a73442699651fc4297eda6691f2960714a66225b7d31cf8da
 ACCESS_TOKEN_EXPIRATION_TIME = 1 # Время жизни access токена в минутах
 REFRESH_TOKEN_EXPIRATION_TIME = 30 # Время жизни refresh токена в днях
 db = SQLAlchemy(app)
-# csrf = CSRFProtect(app)
