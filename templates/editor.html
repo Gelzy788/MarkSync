@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarkSync</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css " />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css " />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css "/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css "/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js "></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/markdown/markdown.min.js "></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js "></script>
@@ -99,12 +99,43 @@
         button:hover {
             background-color: #0056b3;
         }
+        #diagramModal {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            background-color: #222;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        #diagramModal input,
+        #diagramModal select {
+            width: 100%;
+            padding: 6px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #666;
+            background-color: #333;
+            color: #fff;
+        }
+        #modalOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
     <h1>MarkSync</h1>
     <div class="container">
-        <!-- Левая панель: Заметки + Файловый менеджер -->
         <div class="file-explorer">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>Заметки</h2>
@@ -123,18 +154,12 @@
             <ul id="fileList"></ul>
             <ul id="searchResults" style="display: none;"></ul>
         </div>
-
-        <!-- Центральная часть: Редактор или Предпросмотр -->
         <div class="main-content" style="flex: 1; display: flex; flex-direction: column;">
             <input type="text" id="filename" placeholder="Введите имя файла" style="margin-top: 10px; padding: 10px;" />
-
-            <!-- Кнопки переключения -->
             <div class="tabs">
                 <button id="edit-tab" onclick="toggleEditor()" class="active">Редактировать</button>
                 <button id="preview-tab" onclick="togglePreview()">Предпросмотр</button>
             </div>
-
-            <!-- Редактор Markdown -->
             <div id="editor-section" style="display: block;">
                 <div class="text-editor">
                     <textarea id="markdownEditor" name="text">{{ text }}</textarea>
@@ -152,15 +177,34 @@
                     <button type="button" onclick="insertDiagramTemplate()">Диаграмма</button>
                 </div>
             </div>
-
-            <!-- Блок предпросмотра -->
             <div id="preview-section" style="display: none; flex: 1; overflow-y: auto;">
                 <h2>Предпросмотр</h2>
                 <div id="previewContent"></div>
             </div>
         </div>
     </div>
-
+    <div id="diagramModal">
+        <h3>Создать диаграмму</h3>
+        <form id="diagramForm">
+            <label for="diagramType">Тип диаграммы:</label>
+            <select id="diagramType" name="type" required>
+                <option value="bar">Bar</option>
+                <option value="line">Line</option>
+                <option value="pie">Pie</option>
+                <option value="radar">Radar</option>
+                <option value="doughnut">Doughnut</option>
+            </select><br><br>
+            <label for="labels">Метки (через запятую):</label><br>
+            <input type="text" id="labels" name="labels" placeholder="Q1,Q2,Q3" required /><br><br>
+            <label for="datasetLabel">Название набора данных:</label><br>
+            <input type="text" id="datasetLabel" name="datasetLabel" placeholder="Продажи" required /><br><br>
+            <label for="dataValues">Значения (через запятую):</label><br>
+            <input type="text" id="dataValues" name="dataValues" placeholder="10,20,30" required /><br><br>
+            <button type="submit">Вставить диаграмму</button>
+            <button type="button" onclick="closeDiagramModal()">Отмена</button>
+        </form>
+    </div>
+    <div id="modalOverlay"></div>
     <script>
         let currentDirectory = '.';
         const editorElement = CodeMirror.fromTextArea(document.getElementById('markdownEditor'), {
@@ -190,13 +234,32 @@
             editor.focus();
         }
 
-        function insertDiagramTemplate() {
+        function openDiagramModal() {
+            document.getElementById('modalOverlay').style.display = 'block';
+            document.getElementById('diagramModal').style.display = 'block';
+        }
+
+        function closeDiagramModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+            document.getElementById('diagramModal').style.display = 'none';
+            document.getElementById('diagramForm').reset();
+        }
+
+        document.getElementById('diagramForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const type = document.getElementById('diagramType').value;
+            const labels = document.getElementById('labels').value.trim().split(',').map(s => `'${s.trim()}'`);
+            const datasetLabel = document.getElementById('datasetLabel').value.trim();
+            const dataValues = document.getElementById('dataValues').value.trim().split(',').map(Number);
             const template = `<d>
 {
-  type: 'bar',
+  type: '${type}',
   data: {
-    labels: ['Q1', 'Q2'],
-    datasets: [{ label: 'Data', data: [10, 20] }]
+    labels: [${labels.join(', ')}],
+    datasets: [{
+      label: '${datasetLabel}',
+      data: [${dataValues.join(',')}]
+    }]
   }
 }
 </d>`;
@@ -204,11 +267,16 @@
             editor.replaceRange(template, cursor);
             editor.setCursor({ line: cursor.line + 2, ch: 4 });
             editor.focus();
+            closeDiagramModal();
+        });
+
+        function insertDiagramTemplate() {
+            openDiagramModal();
         }
-        
+
         function createNewNote() {
-            document.getElementById('filename').value = ''; // Очистить имя файла
-            editor.setValue(''); // Очистить редактор Markdown
+            document.getElementById('filename').value = '';
+            editor.setValue('');
         }
 
         function toggleEditor() {
@@ -223,7 +291,7 @@
             document.getElementById('preview-tab').classList.add('active');
             document.getElementById('editor-section').style.display = 'none';
             document.getElementById('preview-section').style.display = 'block';
-            previewMarkdown(); // Автоматически обновляем предпросмотр
+            previewMarkdown();
         }
 
         function previewMarkdown() {
@@ -234,9 +302,7 @@
             }
             fetch('/preview', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: text })
             })
             .then(response => response.json())
@@ -252,17 +318,13 @@
         function saveNote() {
             const filename = document.getElementById('filename').value.trim();
             const text = editor.getValue();
-
             if (!filename || !text) {
                 alert("Имя файла и текст обязательны.");
                 return;
             }
-
             fetch('/save_on_server', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `filename=${encodeURIComponent(filename)}&text=${encodeURIComponent(text)}`
             })
             .then(response => {
@@ -361,42 +423,6 @@
             });
         }
 
-        function saveFile() {
-            const filename = document.getElementById('filename').value.trim();
-            const format = document.getElementById('saveFormat').value;
-            const text = editor.getValue();
-            if (filename) {
-                if (format === 'md') {
-                    fetch('/save', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `filename=${encodeURIComponent(filename)}&text=${encodeURIComponent(text)}`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message || "Ошибка сохранения файла.");
-                    });
-                } else if (format === 'pdf') {
-                    const html = document.getElementById('previewContent').innerHTML;
-                    if (!html.trim()) {
-                        alert("HTML-контент отсутствует. Пожалуйста, нажмите 'Предпросмотр' перед сохранением в PDF.");
-                        return;
-                    }
-                    fetch('/save_pdf', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `filename=${encodeURIComponent(filename)}&html=${encodeURIComponent(html)}`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message || "Ошибка сохранения файла.");
-                    });
-                }
-            } else {
-                alert("Пожалуйста, введите имя файла.");
-            }
-        }
-
         function deleteFileOrFolder(name) {
             fetch('/delete', {
                 method: 'POST',
@@ -434,182 +460,143 @@
             }
         }
 
-async function exportToPDF() {
-    const filename = document.getElementById('filename').value.trim();
-    const text = editor.getValue();
-
-    if (!filename || !text) {
-        alert("Введите имя файла и текст.");
-        return;
-    }
-
-    // 1. Получаем HTML через /preview
-    const response = await fetch('/preview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
-    });
-
-    const data = await response.json();
-    if (!data.html) {
-        alert("Ошибка при создании HTML.");
-        return;
-    }
-
-    // 2. Создаём временный div
-    const previewDiv = document.createElement('div');
-    previewDiv.innerHTML = data.html;
-    previewDiv.style.position = 'absolute';
-    previewDiv.style.left = '-9999px';
-    previewDiv.style.top = 0;
-    previewDiv.style.width = '800px'; // ~ширина A4 при масштабе 2x
-    previewDiv.style.backgroundColor = '#000';
-    previewDiv.style.overflow = 'visible';
-    previewDiv.style.maxHeight = 'none';
-    document.body.appendChild(previewDiv);
-
-    // Ждём, чтобы всё прогрузилось
-    setTimeout(async () => {
-        try {
-            // Параметры страницы
-            const pageHeight = 1123; // Высота A4 в px при масштабе 1x (~1123px)
-            const scale = 2;         // Масштабирование — качество vs производительность
-            const pdfWidth = 210;    // A4 ширина в мм
-            const pdfHeight = 297;   // A4 высота в мм
-
-            const fullHeight = previewDiv.scrollHeight;
-            const totalPages = Math.ceil(fullHeight / pageHeight);
-            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-
-            for (let i = 0; i < totalPages; i++) {
-                // Создаём новый div для текущей страницы
-                const pageDiv = document.createElement('div');
-                pageDiv.style.position = 'absolute';
-                pageDiv.style.left = '-9999px';
-                pageDiv.style.top = 0;
-                pageDiv.style.width = '800px';
-                pageDiv.style.height = `${pageHeight}px`;
-                pageDiv.style.backgroundColor = '#000';
-                pageDiv.style.overflow = 'hidden';
-
-                // Копируем полный HTML
-                pageDiv.innerHTML = previewDiv.innerHTML;
-
-                // Обрезаем нужную часть через CSS clipPath
-                pageDiv.style.clipPath = `inset(${i * pageHeight}px 0 ${Math.max(0, fullHeight - (i + 1) * pageHeight)}px 0)`;
-
-                document.body.appendChild(pageDiv);
-
-                // Делаем скриншот
-                const canvas = await html2canvas(pageDiv, {
-                    scale: scale,
-                    backgroundColor: '#000',
-                    scrollY: 0,
-                    windowHeight: pageHeight
-                });
-
-                const imgData = canvas.toDataURL('image/png');
-
-                // Первая страница уже создана, остальные добавляем через addPage()
-                if (i > 0) pdf.addPage();
-
-                const widthRatio = pdfWidth / canvas.width;
-                const imgHeight = canvas.height * widthRatio;
-
-                pdf.setFillColor(0, 0, 0);
-                pdf.rect(0, 0, pdfWidth, pdfHeight, 'F'); // Чёрный фон
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
-
-                // Очищаем DOM
-                document.body.removeChild(pageDiv);
-            }
-
-            // Очищаем основной временный div
-            document.body.removeChild(previewDiv);
-
-            // Сохраняем PDF
-            pdf.save(`${filename}.pdf`);
-
-        } catch (err) {
-            console.error("Ошибка при создании PDF:", err);
-            alert("Не удалось создать PDF.");
-        }
-    }, 1000); // Можно увеличить при сложных диаграммах
-}
-
-        function convertCanvasToImages(html) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    const canvases = doc.querySelectorAll('canvas');
-    canvases.forEach(canvas => {
-        try {
-            const img = doc.createElement('img');
-            img.src = canvas.toDataURL('image/png');
-            img.style.maxWidth = '100%';
-            img.alt = 'Диаграмма';
-            canvas.parentNode.replaceChild(img, canvas);
-        } catch (e) {
-            console.error("Ошибка конвертации canvas:", e);
-        }
-    });
-
-    return doc.body.innerHTML;
-}
-
-        function downloadFile() {
-    const filename = document.getElementById('filename').value.trim();
-    const format = document.getElementById('downloadFormat').value;
-    const text = editor.getValue();
-
-    if (!filename || !text) {
-        alert("Введите имя файла и текст.");
-        return;
-    }
-
-    if (format === 'pdf') {
-        exportToPDF();
-        return;
-    }
-
-    let blob, extension;
-
-    switch (format) {
-        case 'md':
-            blob = new Blob([text], { type: 'text/markdown' });
-            extension = '.md';
-            break;
-        case 'txt':
-            blob = new Blob([text], { type: 'text/plain' });
-            extension = '.txt';
-            break;
-        case 'html':
-            const htmlContent = document.getElementById('previewContent').innerHTML;
-            if (!htmlContent.trim()) {
-                alert("HTML-контент отсутствует. Пожалуйста, нажмите 'Предпросмотр'.");
+        async function exportToPDF() {
+            const filename = document.getElementById('filename').value.trim();
+            const text = editor.getValue();
+            if (!filename || !text) {
+                alert("Введите имя файла и текст.");
                 return;
             }
-            blob = new Blob([`
+            const pdf = new jspdf.jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            const A4_WIDTH = 210;
+            const A4_HEIGHT = 297;
+            const MARGIN = 20;
+            let currentY = MARGIN;
+            const blocks = text.split(/(<d>[\s\S]*?<\/d>)/);
+            for (let i = 0; i < blocks.length; i++) {
+                const block = blocks[i];
+                if (block.startsWith('<d>') && block.endsWith('</d>')) {
+                    const chartCode = block.substring(3, block.length - 4).trim();
+                    try {
+                        const url = `https://quickchart.io/chart?width=600&c=  ${encodeURIComponent(chartCode)}`;
+                        const img = await loadImage(url);
+                        if (currentY > A4_HEIGHT - MARGIN) {
+                            pdf.addPage();
+                            currentY = MARGIN;
+                        }
+                        const widthRatio = (A4_WIDTH - 2 * MARGIN) / img.width;
+                        const imgHeight = img.height * widthRatio;
+                        pdf.addImage(img.src, 'PNG', MARGIN, currentY, A4_WIDTH - 2 * MARGIN, imgHeight);
+                        currentY += imgHeight + 10;
+                    } catch (e) {
+                        console.error("Ошибка при загрузке диаграммы:", e);
+                    }
+                } else {
+                    const lines = pdf.splitTextToSize(block, A4_WIDTH - 2 * MARGIN);
+                    pdf.setFontSize(12);
+                    pdf.setTextColor(255, 255, 255);
+                    pdf.text(lines, MARGIN, currentY);
+                    currentY += lines.length * 6;
+                    if (currentY > A4_HEIGHT - MARGIN) {
+                        pdf.addPage();
+                        currentY = MARGIN;
+                    }
+                }
+            }
+            pdf.save(`${filename}.pdf`);
+        }
+
+        function loadImage(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = url;
+            });
+        }
+
+        function convertCanvasToImages(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const canvases = doc.querySelectorAll('canvas');
+            canvases.forEach(canvas => {
+                try {
+                    const img = doc.createElement('img');
+                    img.src = canvas.toDataURL('image/png');
+                    img.style.maxWidth = '100%';
+                    img.alt = 'Диаграмма';
+                    canvas.parentNode.replaceChild(img, canvas);
+                } catch (e) {
+                    console.error("Ошибка конвертации canvas:", e);
+                }
+            });
+            return doc.body.innerHTML;
+        }
+
+        function downloadFile() {
+            const filename = document.getElementById('filename').value.trim();
+            const format = document.getElementById('downloadFormat').value;
+            const text = editor.getValue();
+            if (!filename || !text) {
+                alert("Введите имя файла и текст.");
+                return;
+            }
+            if (format === 'pdf') {
+                fetch(`/export_pdf?text=${encodeURIComponent(text)}`)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${filename}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    });
+                return;
+            }
+            let blob, extension;
+            switch (format) {
+                case 'md':
+                    blob = new Blob([text], { type: 'text/markdown' });
+                    extension = '.md';
+                    break;
+                case 'txt':
+                    blob = new Blob([text], { type: 'text/plain' });
+                    extension = '.txt';
+                    break;
+                case 'html':
+                    const htmlContent = document.getElementById('previewContent').innerHTML;
+                    if (!htmlContent.trim()) {
+                        alert("HTML-контент отсутствует. Пожалуйста, нажмите 'Предпросмотр'.");
+                        return;
+                    }
+                    blob = new Blob([`
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><style>body{font-family:Arial;padding:20px}img{max-width:100%}</style></head>
 <body>${htmlContent}</body></html>`], { type: 'text/html' });
-            extension = '.html';
-            break;
-        default:
-            alert("Неизвестный формат");
-            return;
-    }
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}${extension}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
+                    extension = '.html';
+                    break;
+                default:
+                    alert("Неизвестный формат");
+                    return;
+            }
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}${extension}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
 
         function searchFiles() {
             const query = document.getElementById('folderName').value.trim().toLowerCase();

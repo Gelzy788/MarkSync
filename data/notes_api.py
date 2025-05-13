@@ -1,9 +1,8 @@
-from flask import Blueprint, render_template, request, jsonify, Response
+from flask import render_template, request, jsonify
 from reportlab.platypus import Image as RLImage
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
-import traceback
 from urllib.parse import quote
 import re
 from . import notes_blueprint
@@ -20,7 +19,6 @@ except Exception:
         print("Шрифт не найден:", font_path)
 
 def encode_filename(filename):
-    """Кодируем имя файла для заголовка Content-Disposition"""
     safe_filename = re.sub(r'[^\w\.\-\_]', '_', filename)
     return quote(safe_filename)
 

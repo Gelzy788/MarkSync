@@ -5,8 +5,8 @@ from forms.register_form import *
 from data import auth_blueprint, notes_blueprint
 from utils import convert_diagrams, convert_tasks
 import markdown2
-
-from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
+from utils import extract_diagrams, generate_pdf_from_markdown
+from flask import render_template, request, jsonify, send_file
 
 app.register_blueprint(auth_blueprint)
 app.register_blueprint(notes_blueprint)
@@ -79,6 +79,17 @@ def save_on_server(user):
         print("ERROR", e)
         db.session.rollback()
         return jsonify({'status': 'error', 'message': 'Ошибка сохранения'}), 500
+
+
+@app.route('/export_pdf')
+@token_required
+def export_pdf(user):
+    text = request.args.get('text', '')
+    if not text:
+        return jsonify({"error": "Нет текста для экспорта"}), 400
+    diagrams = extract_diagrams(text)
+    pdf_path = generate_pdf_from_markdown(text, diagrams)
+    return send_file(pdf_path, as_attachment=True, download_name="document.pdf")
     
 
 if __name__ == "__main__":
