@@ -34,25 +34,6 @@
             display: flex;
             flex: 1;
         }
-        .file-explorer {
-            width: 250px;
-            border-right: 1px solid #24cc5f;
-            padding: 10px;
-            overflow-y: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-        }
-        .file-explorer ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .file-explorer li {
-            margin: 5px 0;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-        .file-explorer li:hover {
-            color: #24cc5f;
-        }
         .tabs {
             display: flex;
             gap: 10px;
@@ -158,13 +139,6 @@
                     <li class="list-group-item bg-transparent text-white" onclick="loadNote('{{ note.name }}', `{{ note.text|e }}`, '{{ note.id }}')">{{ note.name }}</li>
                 {% endfor %}
             </ul>
-            <hr>
-            <h2 class="mb-2">Файловый менеджер</h2>
-            <div id="currentPath" class="mb-2">Текущий путь:</div>
-            <input type="text" id="folderName" placeholder="Поиск или имя папки" oninput="searchFiles()" class="form-control mb-2" />
-            <button onclick="createFolder()" class="btn btn-gradient-outline w-100 mb-2">Создать папку</button>
-            <ul id="fileList" class="list-group list-group-flush"></ul>
-            <ul id="searchResults" style="display: none;" class="list-group list-group-flush"></ul>
         </div>
         <div class="main-content" style="flex: 1; display: flex; flex-direction: column;">
             <input type="text" id="filename" placeholder="Введите имя файла" class="form-control mt-2" />
@@ -221,7 +195,6 @@
     <div id="modalOverlay"></div>
 
     <script>
-        let currentDirectory = '.';
         const editorElement = CodeMirror.fromTextArea(document.getElementById('markdownEditor'), {
             mode: 'markdown',
             lineNumbers: true,
@@ -382,114 +355,6 @@
                 });
         }
 
-        function updateCurrentPath() {
-            document.getElementById('currentPath').textContent = `Текущий путь: ${currentDirectory}`;
-        }
-
-        function renderFileList() {
-            fetch('/list_files', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `directory=${encodeURIComponent(currentDirectory)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                const fileList = document.getElementById('fileList');
-                fileList.innerHTML = '';
-                if (currentDirectory !== '.') {
-                    const backLi = document.createElement('li');
-                    backLi.textContent = '.. (Назад)';
-                    backLi.style.fontWeight = 'bold';
-                    backLi.onclick = () => navigateToFolder('..');
-                    fileList.appendChild(backLi);
-                }
-                data.files.forEach(item => {
-                    const li = document.createElement('li');
-                    li.textContent = item;
-                    if (item.startsWith('\\')) {
-                        li.style.fontWeight = 'bold';
-                        li.onclick = () => navigateToFolder(item.slice(1));
-                    } else {
-                        li.onclick = () => loadFileFromList(item);
-                        const deleteButton = document.createElement('button');
-                        deleteButton.textContent = 'Удалить';
-                        deleteButton.onclick = (e) => {
-                            e.stopPropagation();
-                            if (confirm(`Вы уверены, что хотите удалить "${item}"?`)) {
-                                deleteFileOrFolder(item);
-                            }
-                        };
-                        li.appendChild(deleteButton);
-                    }
-                    fileList.appendChild(li);
-                });
-            });
-        }
-
-        function navigateToFolder(folderName) {
-            if (folderName === '..') {
-                currentDirectory = currentDirectory.split('/').slice(0, -1).join('/') || '.';
-            } else {
-                currentDirectory = `${currentDirectory}/${folderName}`.replace('//', '/');
-            }
-            renderFileList();
-            updateCurrentPath();
-        }
-
-        function loadFileFromList(fileName) {
-            fetch('/load', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `filename=${encodeURIComponent(`${currentDirectory}/${fileName}`)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.text) {
-                    editor.setValue(data.text);
-                    document.getElementById('filename').value = fileName.replace(/\.md$/, '');
-                } else {
-                    alert(data.message || "Ошибка загрузки файла.");
-                }
-            });
-        }
-
-        function deleteFileOrFolder(name) {
-            fetch('/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `path=${encodeURIComponent(`${currentDirectory}/${name}`)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert(data.message);
-                    renderFileList();
-                } else {
-                    alert(data.error || "Ошибка удаления.");
-                }
-            });
-        }
-
-        function createFolder() {
-            const folderName = document.getElementById('folderName').value.trim();
-            if (folderName) {
-                fetch('/create_folder', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `folder_name=${encodeURIComponent(folderName)}&directory=${encodeURIComponent(currentDirectory)}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        alert(data.message);
-                        renderFileList();
-                    } else {
-                        alert(data.error || "Ошибка создания папки.");
-                    }
-                });
-            }
-        }
-
         async function exportToPDF() {
             const filename = document.getElementById('filename').value.trim();
             const text = editor.getValue();
@@ -628,44 +493,7 @@
             URL.revokeObjectURL(url);
         }
 
-        function searchFiles() {
-            const query = document.getElementById('folderName').value.trim().toLowerCase();
-            const fileList = document.getElementById('fileList');
-            const searchResults = document.getElementById('searchResults');
-            if (!query) {
-                searchResults.style.display = 'none';
-                fileList.style.display = 'block';
-                return;
-            }
-            searchResults.innerHTML = '';
-            searchResults.style.display = 'block';
-            fileList.style.display = 'none';
-            fetch('/list_files', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `directory=${encodeURIComponent(currentDirectory)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                data.files.forEach(item => {
-                    if (item.toLowerCase().includes(query)) {
-                        const li = document.createElement('li');
-                        li.textContent = item;
-                        if (item.startsWith('\\')) {
-                            li.style.fontWeight = 'bold';
-                            li.onclick = () => navigateToFolder(item.slice(1));
-                        } else {
-                            li.onclick = () => loadFileFromList(item);
-                        }
-                        searchResults.appendChild(li);
-                    }
-                });
-            });
-        }
-
         document.addEventListener('DOMContentLoaded', function () {
-            updateCurrentPath();
-            renderFileList();
             // renderNotesList();
         });
     </script>
