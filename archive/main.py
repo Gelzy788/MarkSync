@@ -11,7 +11,7 @@ import tempfile
 import traceback
 from io import BytesIO
 
-from utils import markdown_to_html, convert_tasks, convert_diagrams
+from data.utils import markdown_to_html, convert_tasks, convert_diagrams
 
 main_blueprint = Blueprint('main', __name__)
 

@@ -1,6 +1,6 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import update
-from autorisation import *
+from archive.autorisation import *
 from config import *
 from data.__all_models import *
 

@@ -6,7 +6,7 @@ import os
 from urllib.parse import quote
 import re
 from . import notes_blueprint
-from utils import markdown_to_html, convert_tasks, convert_diagrams
+from data.utils import markdown_to_html, convert_tasks, convert_diagrams
 
 
 try:

@@ -1,11 +1,10 @@
-from autorisation import *
 from config import *
 from data.__all_models import *
 from forms.register_form import *
 from data import auth_blueprint, notes_blueprint
-from utils import convert_diagrams, convert_tasks
+from data.utils import convert_diagrams, convert_tasks, token_required
 import markdown2
-from utils import extract_diagrams, generate_pdf_from_markdown
+from data.utils import extract_diagrams, generate_pdf_from_markdown
 from flask import render_template, request, jsonify, send_file
 
 # Загрузка микро-приложений
