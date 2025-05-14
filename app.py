@@ -33,6 +33,9 @@ def protected(user):
 @token_required
 def marks(user):
     files = Notes.query.filter_by(user_id=user.ID).all()
+    notes_accesses = NotesAccess.query.filter_by(user_id=user.ID).all()
+    for i in notes_accesses:
+        files.append(Notes.query.filter_by(ID=notes_accesses.note_id).first())
     text = ''
     html = ''
     if request.method == 'POST':
