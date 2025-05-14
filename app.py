@@ -8,13 +8,16 @@ import markdown2
 from utils import extract_diagrams, generate_pdf_from_markdown
 from flask import render_template, request, jsonify, send_file
 
+# Загрузка микро-приложений
 app.register_blueprint(auth_blueprint)
 app.register_blueprint(notes_blueprint)
 
+# Главная страница
 @app.route('/')
 def main():
     return render_template('main.html', title="Главная страница")
 
+# Страница профиля
 @app.route('/profile')
 @token_required
 def profile(user):
@@ -27,10 +30,18 @@ def protected(user):
     return jsonify({'message': f'Hello, {user.username}! This is a protected API endpoint.'})
 
 
+# Страница с заметками
 @app.route('/marks', methods=['GET', 'POST'])
 @token_required
 def marks(user):
     files = Notes.query.filter_by(user_id=user.ID).all()
+    notes_accesses = NotesAccess.query.filter_by(user_id=user.ID).all()
+    for i in notes_accesses:
+        # print(Notes.query.filter_by(ID=i.note_id).first())
+        note = Notes.query.filter_by(ID=i.note_id).first()
+        if note:
+            files.append(note)
+    
     text = ''
     html = ''
     if request.method == 'POST':
@@ -38,9 +49,11 @@ def marks(user):
         text = convert_tasks(text)
         text = convert_diagrams(text)
         html = markdown2.markdown(text, extras=["fenced-code-blocks", "tables", "strike"])
+    print(files)
     return render_template('editor.html', text=text, html=html, files=files)
 
 
+# вспомогательная функция взимодействия с заметками
 @app.route('/preview', methods=['POST'])
 @token_required
 def preview(user):
@@ -52,6 +65,7 @@ def preview(user):
     return jsonify({'html': html})
 
 
+# Вспомогательная фнкция загрузки заметок из бд
 @app.route('/api/notes')
 @token_required
 def api_notes(user):
@@ -59,6 +73,7 @@ def api_notes(user):
     return jsonify({'notes': [{'name': note.name, 'text': note.text, 'id': note.ID} for note in notes]})
 
 
+# Функция сохранения файлов в бд
 @app.route('/save_on_server', methods=['POST'])
 @token_required
 def save_on_server(user):
@@ -85,6 +100,7 @@ def save_on_server(user):
         return jsonify({'status': 'error', 'message': 'Ошибка сохранения'}), 500
 
 
+# Функция сохранения в pdf
 @app.route('/export_pdf')
 @token_required
 def export_pdf(user):

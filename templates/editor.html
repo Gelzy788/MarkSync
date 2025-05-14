@@ -224,6 +224,7 @@
         window.editor = editorElement;
 
         function loadNote(title, content, noteId = '') {
+            console.log("Загрузка заметки:", title, content);
             document.getElementById('filename').value = title;
             editor.setValue(content);
             document.getElementById('noteId').value = noteId;
@@ -651,7 +652,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             updateCurrentPath();
             renderFileList();
-            renderNotesList();
+            // renderNotesList();
         });
     </script>
 </body>
