@@ -406,20 +406,48 @@
         }
 
         function renderNotesList() {
-            fetch('/api/notes')
-                .then(res => res.json())
-                .then(data => {
-                    const list = document.getElementById('noteList');
-                    list.innerHTML = '';
-                    data.notes.forEach(note => {
+    fetch('/api/notes')
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById('noteList');
+            list.innerHTML = '';
+            
+            // Сначала добавляем собственные заметки
+            data.notes.forEach(note => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item bg-transparent text-white';
+                li.textContent = note.name;
+                li.onclick = () => loadNote(note.name, note.text, note.id);
+                list.appendChild(li);
+            });
+            
+            // Восстанавливаем текущую заметку, если она есть в localStorage
+            const savedNote = localStorage.getItem('currentNote');
+            if (savedNote) {
+                try {
+                    const note = JSON.parse(savedNote);
+                    // Проверяем, есть ли уже такая заметка в списке
+                    const exists = [...list.children].some(
+                        item => item.textContent === note.title
+                    );
+                    if (!exists && note.id) {
+                        // Если заметки нет в списке, но она есть в localStorage,
+                        // значит это заметка с доступом - добавляем её
                         const li = document.createElement('li');
                         li.className = 'list-group-item bg-transparent text-white';
-                        li.textContent = note.name;
-                        li.onclick = () => loadNote(note.name, note.text, note.id);
+                        li.textContent = note.title;
+                        li.onclick = () => loadNote(note.title, note.content, note.id);
                         list.appendChild(li);
-                    });
-                });
-        }
+                    }
+                } catch (e) {
+                    console.error("Ошибка при обработке сохранённой заметки:", e);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке списка заметок:', error);
+        });
+}
 
         async function exportToPDF() {
             const filename = document.getElementById('filename').value.trim();

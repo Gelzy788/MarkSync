@@ -69,7 +69,16 @@ def preview(user):
 @app.route('/api/notes')
 @token_required
 def api_notes(user):
+    # Собственные заметки пользователя
     notes = Notes.query.filter_by(user_id=user.ID).all()
+    
+    # Заметки, к которым у пользователя есть доступ
+    notes_accesses = NotesAccess.query.filter_by(user_id=user.ID).all()
+    for access in notes_accesses:
+        note = Notes.query.filter_by(ID=access.note_id).first()
+        if note and note not in notes:  # Проверяем, чтобы не было дубликатов
+            notes.append(note)
+    
     return jsonify({'notes': [{'name': note.name, 'text': note.text, 'id': note.ID} for note in notes]})
 
 
