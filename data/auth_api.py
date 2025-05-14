@@ -1,11 +1,12 @@
-from flask import render_template, request, redirect, url_for, jsonify
 from . import auth_blueprint
 from .auth_services import *
 from forms.register_form import RegistrationForm
 from forms.login_form import LoginForm
 
-from flask import flash, make_response
+from flask import render_template, request, redirect, url_for, flash, make_response
 
+
+# Страница регистрации
 @auth_blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == "POST":
@@ -29,6 +30,7 @@ def register():
     return render_template('register.html', title="Регистрация")
 
 
+# Страница входа в аккаунт
 @auth_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -48,6 +50,8 @@ def login():
 
     return render_template('login.html', form=form, title="Вход в аккаунт")
 
+
+# Выход из аккаунта
 @auth_blueprint.route('/logout')
 def logout():
     response = make_response(redirect('/'))

@@ -73,6 +73,8 @@ def save_tokens(response, access_token, refresh_token):
     print("Токены сохранены!", response)
     return response
 
+
+# Добавление refresh токена в бд
 def add_refresh_token_db(email, refresh_token):
     stmt = (
         update(Users)

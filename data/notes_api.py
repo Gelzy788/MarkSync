@@ -1,20 +1,23 @@
 from flask import render_template, request, jsonify, send_file
+
 from reportlab.platypus import Image as RLImage
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+
+import re
 import os
 from urllib.parse import quote
-import re
-from . import notes_blueprint
-from data.utils import markdown_to_html, convert_tasks, convert_diagrams, extract_diagrams, generate_pdf_from_markdown, token_required
-from config import db
-from data.notes import Notes
-from data.notes_access import NotesAccess
+
 import markdown2
 
+from config import db
+from data.notes import Notes
+from . import notes_blueprint
+from data.notes_access import NotesAccess
+from data.utils import markdown_to_html, convert_tasks, convert_diagrams, extract_diagrams, generate_pdf_from_markdown, token_required
 
 
-
+# Подключение шрифта для сохранения заметок в pdf формате
 try:
     pdfmetrics.getFont('DejaVuSans')
 except Exception:
@@ -24,10 +27,12 @@ except Exception:
     else:
         print("Шрифт не найден:", font_path)
 
+# Функция для кодирования имени файла
 def encode_filename(filename):
     safe_filename = re.sub(r'[^\w\.\-\_]', '_', filename)
     return quote(safe_filename)
 
+# Страница заметок
 @notes_blueprint.route('/editor', methods=['GET', 'POST'])
 def editor():
     html = ""
@@ -39,6 +44,7 @@ def editor():
         html = markdown_to_html(text)
     return render_template('editor.html', text=text, html=html)
 
+# Сохранение файла на компьютер
 @notes_blueprint.route('/save', methods=['POST'])
 def save_file():
     filename = request.form['filename']
@@ -49,6 +55,8 @@ def save_file():
         f.write(text)
     return jsonify({"message": f"Файл '{filename}' сохранён!"})
 
+
+# Загрузка файла с диска на сервер
 @notes_blueprint.route('/load', methods=['POST'])
 def load_file():
     filename = request.form['filename']
@@ -66,7 +74,6 @@ def load_file():
 
 
 # вспомогательная функция взимодействия с заметками
-# @app.route('/preview', methods=['POST'])
 @notes_blueprint.route('/preview', methods=['POST'])
 @token_required
 def preview(user):
@@ -79,7 +86,6 @@ def preview(user):
 
 
 # Вспомогательная фнкция загрузки заметок из бд
-# @app.route('/api/notes')
 @notes_blueprint.route('/api/notes')
 @token_required
 def api_notes(user):
@@ -97,7 +103,6 @@ def api_notes(user):
 
 
 # Функция сохранения файлов в бд
-# @app.route('/save_on_server', methods=['POST'])
 @notes_blueprint.route('/save_on_server', methods=['POST'])
 @token_required
 def save_on_server(user):
@@ -127,7 +132,6 @@ def save_on_server(user):
 
 
 # Функция сохранения в pdf
-# @app.route('/export_pdf')
 @notes_blueprint.route('/export_pdf')
 @token_required
 def export_pdf(user):

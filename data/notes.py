@@ -1,6 +1,7 @@
 from config import db
 
 
+# Класс таблицы notes
 class Notes(db.Model):
     __tablename__ = 'notes'
     ID = db.Column(db.Integer(), primary_key=True, autoincrement=True)

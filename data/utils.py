@@ -1,23 +1,28 @@
-from flask import Flask, make_response, request, flash, redirect, url_for
-import re
+from flask import make_response, request, flash, redirect, url_for
 import requests
-from io import BytesIO
-from PIL import Image
+
+import re
+import os
+import jwt
 import base64
 import markdown2
+from PIL import Image
 from fpdf import FPDF
-import os
+from io import BytesIO
 from functools import wraps
+
+
 from config import *
 from data.__all_models import *
-import jwt
 from data.auth_services import *
 
 
+# Перевод md в html для вывода
 def markdown_to_html(text):
     return markdown2.markdown(text, extras=["fenced-code-blocks", "tables", "strike"])
 
 
+# Конвертирование чекбоксов в нормальный вид
 def convert_tasks(text):
     def replace_task(match):
         task_text = match.group(1)
@@ -25,6 +30,7 @@ def convert_tasks(text):
     return re.sub(r'<t>(.*?)</t>', replace_task, text)
 
 
+# Конвертирование диаграмм в нормальный вид
 def convert_diagrams(text):
     def replace_diagram(match):
         chart_params = match.group(1)
@@ -44,6 +50,7 @@ def convert_diagrams(text):
     return re.sub(r'<d>([\s\S]*?)</d>', replace_diagram, text)
 
 
+# Извлечение диаграмм из текста
 def extract_diagrams(text):
     diagram_pattern = r'<d>\s*({[\s\S]*?})\s*</d>'
     diagrams = []
@@ -63,11 +70,13 @@ def extract_diagrams(text):
     return diagrams
 
 
+# Удаление тегов диаграмм из текста
 def remove_diagram_tags(text):
     cleaned_text = re.sub(r'<d>[\s\S]*?</d>', '', text)
     return cleaned_text
 
 
+# Генерация pdf из текста
 def generate_pdf_from_markdown(text, diagrams_bytes, filename="output.pdf"):
     text = remove_diagram_tags(text)
     pdf = FPDF()
@@ -142,6 +151,7 @@ def generate_pdf_from_markdown(text, diagrams_bytes, filename="output.pdf"):
     return filename
 
 
+# Перенос текста по ширине
 def wrap_text(pdf, text, max_width):
     words = text.split()
     lines = []
@@ -165,7 +175,7 @@ def get_user():
                       ACCESS_TOKEN_SECRET_KEY, algorithms=["HS256"])['user_id'])
     return user
 
-# декоратор для проверки наличия и актуальности access токена
+# Lекоратор для проверки наличия и актуальности access токена
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
