@@ -143,7 +143,7 @@
             </div>
             <ul id="noteList">
                 {% for note in files %}
-                    <li onclick="loadNote('{{ note.name }}', `{{ note.text|e }}`)">{{ note.name }}</li>
+                    <li onclick="loadNote('{{ note.name }}', `{{ note.text|e }}`, '{{ note.id }}')">{{ note.name }}</li>
                 {% endfor %}
             </ul>
             <hr>
@@ -156,6 +156,7 @@
         </div>
         <div class="main-content" style="flex: 1; display: flex; flex-direction: column;">
             <input type="text" id="filename" placeholder="Введите имя файла" style="margin-top: 10px; padding: 10px;" />
+            <input type="hidden" id="noteId" value="">
             <div class="tabs">
                 <button id="edit-tab" onclick="toggleEditor()" class="active">Редактировать</button>
                 <button id="preview-tab" onclick="togglePreview()">Предпросмотр</button>
@@ -222,9 +223,10 @@
         });
         window.editor = editorElement;
 
-        function loadNote(title, content) {
+        function loadNote(title, content, noteId = '') {
             document.getElementById('filename').value = title;
             editor.setValue(content);
+            document.getElementById('noteId').value = noteId;
         }
 
         function insertTaskTemplate() {
@@ -277,6 +279,7 @@
         function createNewNote() {
             document.getElementById('filename').value = '';
             editor.setValue('');
+            document.getElementById('noteId').value = ''
         }
 
         function toggleEditor() {
@@ -318,14 +321,26 @@
         function saveNote() {
             const filename = document.getElementById('filename').value.trim();
             const text = editor.getValue();
+            const noteId = document.getElementById('noteId').value;
+
             if (!filename || !text) {
                 alert("Имя файла и текст обязательны.");
                 return;
             }
+
+            const formData = new URLSearchParams();
+            formData.append('filename', filename);
+            formData.append('text', text);
+            if (noteId) {
+                formData.append('note_id', noteId);
+            }
+
             fetch('/save_on_server', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `filename=${encodeURIComponent(filename)}&text=${encodeURIComponent(text)}`
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData
             })
             .then(response => {
                 if (response.status === 200) {
@@ -346,7 +361,7 @@
                     data.notes.forEach(note => {
                         const li = document.createElement('li');
                         li.textContent = note.name;
-                        li.onclick = () => loadNote(note.name, note.text);
+                        li.onclick = () => loadNote(note.name, note.text, note.id);
                         list.appendChild(li);
                     });
                 });

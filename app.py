@@ -56,7 +56,7 @@ def preview(user):
 @token_required
 def api_notes(user):
     notes = Notes.query.filter_by(user_id=user.ID).all()
-    return jsonify({'notes': [{'name': note.name, 'text': note.text} for note in notes]})
+    return jsonify({'notes': [{'name': note.name, 'text': note.text, 'id': note.ID} for note in notes]})
 
 
 @app.route('/save_on_server', methods=['POST'])
@@ -64,6 +64,7 @@ def api_notes(user):
 def save_on_server(user):
     filename = request.form['filename']
     text = request.form['text']
+    note_id = request.form.get('note_id')
     existing_note = Notes.query.filter_by(name=filename, user_id=user.ID).first()
     
     if existing_note:
@@ -74,6 +75,9 @@ def save_on_server(user):
     
     try:
         db.session.commit()
+        if not note_id:
+            note_id = Notes.query.filter_by(name=filename, user_id=user.ID).first().ID
+        print(note_id)
         return jsonify({'status': 'success', 'message': 'Заметка сохранена'}), 200
     except Exception as e:
         print("ERROR", e)
