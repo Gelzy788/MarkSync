@@ -12,6 +12,7 @@ import markdown2
 
 from config import db
 from data.notes import Notes
+from data.users import Users
 from . import notes_blueprint
 from data.notes_access import NotesAccess
 from data.utils import markdown_to_html, convert_tasks, convert_diagrams, extract_diagrams, generate_pdf_from_markdown, token_required
@@ -26,6 +27,98 @@ except Exception:
         pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
     else:
         print("Шрифт не найден:", font_path)
+
+
+# Страница с заметками
+# @app.route('/marks', methods=['GET', 'POST'])
+@notes_blueprint.route('/marks', methods=['GET', 'POST'])
+@token_required
+def marks(user):
+    files = Notes.query.filter_by(user_id=user.ID).all()
+    notes_accesses = NotesAccess.query.filter_by(user_id=user.ID).all()
+    for i in notes_accesses:
+        note = Notes.query.filter_by(ID=i.note_id).first()
+        if note:
+            files.append(note)
+    
+    text = ''
+    html = ''
+    if request.method == 'POST':
+        text = request.form['text']
+        text = convert_tasks(text)
+        text = convert_diagrams(text)
+        html = markdown2.markdown(text, extras=["fenced-code-blocks", "tables", "strike"])
+    print([i.ID for i in files])
+    return render_template('editor.html', text=text, html=html, files=files)
+
+
+# Выдача досутпа к заметке
+@notes_blueprint.route('/api/notes/<int:note_id>/access', methods=['GET', 'POST'])
+@token_required
+def note_access(user, note_id):
+    note = Notes.query.filter_by(ID=note_id).first()
+    if not note:
+        return jsonify({'status': 'error', 'message': 'Заметка не найдена'}), 404
+    
+    # Проверка, что пользователь - владелец заметки
+    if note.user_id != user.ID:
+        return jsonify({'status': 'error', 'message': 'Нет прав доступа'}), 403
+
+    if request.method == 'GET':
+        # Получаем список пользователей с доступом
+        accesses = NotesAccess.query.filter_by(note_id=note_id).all()
+        users = []
+        for access in accesses:
+            user = db.session.get(Users, access.user_id)
+            if user:
+                users.append({'id': user.ID, 'username': user.username})
+        return jsonify({'users': users})
+    
+    elif request.method == 'POST':
+        # Добавляем доступ для пользователя
+        data = request.get_json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'status': 'error', 'message': 'ID пользователя не указан'}), 400
+        
+        # Проверяем, что пользователь существует
+        target_user = db.session.get(Users, user_id)
+        if not target_user:
+            return jsonify({'status': 'error', 'message': 'Пользователь не найден'}), 404
+        
+        # Проверяем, что доступ еще не выдан
+        existing_access = NotesAccess.query.filter_by(note_id=note_id, user_id=user_id).first()
+        if existing_access:
+            return jsonify({'status': 'error', 'message': 'Доступ уже предоставлен'}), 400
+        
+        new_access = NotesAccess(note_id=note_id, user_id=user_id, access_level='admin')
+        db.session.add(new_access)
+        db.session.commit()
+        
+        return jsonify({'status': 'success', 'message': 'Доступ предоставлен'})
+
+
+# Удаление доступа к заметке
+@notes_blueprint.route('/api/notes/<int:note_id>/access/<int:user_id>', methods=['DELETE'])
+@token_required
+def remove_note_access(user, note_id, user_id):
+    note = Notes.query.filter_by(ID=note_id).first()
+    if not note:
+        return jsonify({'status': 'error', 'message': 'Заметка не найдена'}), 404
+    
+    # Проверка, что пользователь - владелец заметки
+    if note.user_id != user.ID:
+        return jsonify({'status': 'error', 'message': 'Нет прав доступа'}), 403
+    
+    access = NotesAccess.query.filter_by(note_id=note_id, user_id=user_id).first()
+    if not access:
+        return jsonify({'status': 'error', 'message': 'Доступ не найден'}), 404
+    
+    db.session.delete(access)
+    db.session.commit()
+    
+    return jsonify({'status': 'success', 'message': 'Доступ удален'})
 
 # Функция для кодирования имени файла
 def encode_filename(filename):
