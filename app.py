@@ -27,10 +27,30 @@ def protected(user):
     return jsonify({'message': f'Hello, {user.username}! This is a protected API endpoint.'})
 
 
+# @app.route('/marks', methods=['GET', 'POST'])
+# @token_required
+# def marks(user):
+#     files = Notes.query.filter_by(user_id=user.ID).all()
+#     text = ''
+#     html = ''
+#     if request.method == 'POST':
+#         text = request.form['text']
+#         text = convert_tasks(text)
+#         text = convert_diagrams(text)
+#         html = markdown2.markdown(text, extras=["fenced-code-blocks", "tables", "strike"])
+#     return render_template('editor.html', text=text, html=html, files=files)
+
 @app.route('/marks', methods=['GET', 'POST'])
 @token_required
 def marks(user):
     files = Notes.query.filter_by(user_id=user.ID).all()
+    notes_accesses = NotesAccess.query.filter_by(user_id=user.ID).all()
+    for i in notes_accesses:
+        # print(Notes.query.filter_by(ID=i.note_id).first())
+        note = Notes.query.filter_by(ID=i.note_id).first()
+        if note:
+            files.append(note)
+    
     text = ''
     html = ''
     if request.method == 'POST':
@@ -38,6 +58,7 @@ def marks(user):
         text = convert_tasks(text)
         text = convert_diagrams(text)
         html = markdown2.markdown(text, extras=["fenced-code-blocks", "tables", "strike"])
+    print(files)
     return render_template('editor.html', text=text, html=html, files=files)
 
 

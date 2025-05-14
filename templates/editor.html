@@ -223,6 +223,7 @@
         window.editor = editorElement;
 
         function loadNote(title, content) {
+            console.log("Загрузка заметки:", title, content);
             document.getElementById('filename').value = title;
             editor.setValue(content);
         }
