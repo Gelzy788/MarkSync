@@ -1,0 +1,71 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    margin: 0;
+    background: linear-gradient(145deg, #0f0c29, #302b63, #24cc5f);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 30px;
+    background: rgba(26, 26, 26, 0.8);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(36, 204, 95, 0.3);
+    border: 1px solid #24cc5f;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    background: linear-gradient(to right, #24cc5f, #24cc5f, #0f0c29);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.profile-info {
+    margin-bottom: 30px;
+}
+
+.info-group {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(34, 34, 34, 0.5);
+    border-radius: 5px;
+    border-left: 3px solid #24cc5f;
+}
+
+.info-label {
+    color: #24cc5f;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 1.1rem;
+}
+
+.logout-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(45deg, #0f0c29, #302b63);
+    border: 1px solid #ff6b6b;
+    color: #ff6b6b;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+    background: linear-gradient(45deg, #302b63, #0f0c29);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+}
