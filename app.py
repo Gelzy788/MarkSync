@@ -49,7 +49,7 @@ def marks(user):
         text = convert_tasks(text)
         text = convert_diagrams(text)
         html = markdown2.markdown(text, extras=["fenced-code-blocks", "tables", "strike"])
-    print(files)
+    print([i.ID for i in files])
     return render_template('editor.html', text=text, html=html, files=files)
 
 
@@ -80,7 +80,7 @@ def save_on_server(user):
     filename = request.form['filename']
     text = request.form['text']
     note_id = request.form.get('note_id')
-    existing_note = Notes.query.filter_by(name=filename, user_id=user.ID).first()
+    existing_note = Notes.query.filter_by(ID=note_id).first()
     
     if existing_note:
         existing_note.text = text
@@ -90,8 +90,6 @@ def save_on_server(user):
     
     try:
         db.session.commit()
-        if not note_id:
-            note_id = Notes.query.filter_by(name=filename, user_id=user.ID).first().ID
         print(note_id)
         return jsonify({'status': 'success', 'message': 'Заметка сохранена'}), 200
     except Exception as e:
