@@ -90,8 +90,12 @@ def save_on_server(user):
     
     try:
         db.session.commit()
-        print(note_id)
-        return jsonify({'status': 'success', 'message': 'Заметка сохранена'}), 200
+        # Возвращаем ID заметки (новой или существующей)
+        return jsonify({
+            'status': 'success', 
+            'message': 'Заметка сохранена',
+            'id': existing_note.ID if existing_note else new_note.ID
+        }), 200
     except Exception as e:
         print("ERROR", e)
         db.session.rollback()
