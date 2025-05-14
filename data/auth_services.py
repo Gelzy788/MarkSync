@@ -59,7 +59,7 @@ def save_tokens(response, access_token, refresh_token):
         access_token,
         httponly=True,  # Куки недоступны через JavaScript
         secure=True,    # Куки передаются только по HTTPS (в production)
-        samesite='Strict'   # Защита от CSRF-атак
+        samesite='None'   # Защита от CSRF-атак
     )
 
     response.set_cookie(
@@ -67,7 +67,7 @@ def save_tokens(response, access_token, refresh_token):
         refresh_token,
         httponly=True,  # Куки недоступны через JavaScript
         secure=True,    # Куки передаются только по HTTPS (в production)
-        samesite='Strict'   # Защита от CSRF-атак
+        samesite='None'   # Защита от CSRF-атак
     )
 
     print("Токены сохранены!", response)
