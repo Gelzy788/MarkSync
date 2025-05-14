@@ -8,4 +8,4 @@ class NotesAccess(db.Model):
     note_id = db.Column(db.Integer(), db.ForeignKey(
         'notes.ID'))
     user_id = db.Column(db.Integer(), db.ForeignKey(
-        'user.ID'))
+        'users.ID'))

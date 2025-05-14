@@ -51,6 +51,7 @@
                     <button type="button" onclick="downloadFile()" class="btn btn-gradient-green">Скачать</button>
                     <button type="button" onclick="insertTaskTemplate()" class="btn btn-gradient-green">Задача</button>
                     <button type="button" onclick="insertDiagramTemplate()" class="btn btn-gradient-green">Диаграмма</button>
+                    <button type="button" onclick="openAccessModal()" class="btn btn-gradient-green">Доступ</button>
                 </div>
             </div>
             <div id="preview-section" style="display: none; flex: 1; overflow-y: auto;">
@@ -84,5 +85,26 @@
     <div id="modalOverlay"></div>
 
     <script src="static/js/editor.js"></script>
+
+    <div id="accessModal" class="shadow-lg rounded p-3 bg-secondary">
+        <h3 class="mb-3">Управление доступом</h3>
+        <div class="mb-3">
+            <label for="userIdInput" class="form-label">Добавить пользователя по ID:</label>
+            <div class="d-flex gap-2">
+                <input type="text" id="userIdInput" class="form-control" placeholder="ID пользователя">
+                <button type="button" onclick="addUserAccess()" class="btn btn-gradient-green">Добавить</button>
+            </div>
+        </div>
+        <div class="access-list-container">
+            <h4>Пользователи с доступом:</h4>
+            <ul id="accessList" class="list-group">
+                <!-- Список пользователей будет здесь -->
+            </ul>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+            <button type="button" onclick="closeAccessModal()" class="btn btn-gradient-outline">Закрыть</button>
+        </div>
+    </div>
+
 </body>
 </html>

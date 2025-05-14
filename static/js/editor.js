@@ -14,15 +14,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     window.editor = editorElement;
 
+    // Инициализация текущей заметки
+    currentNoteId = document.getElementById('noteId').value;
+
     restoreNoteFromStorage();
     renderNotesList();
 });
 
+// Глобальные переменные
+let currentNoteId = null;
+
+// Функции для работы с заметками
 function loadNote(title, content, noteId = '') {
+    console.log("Загрузка заметки:", title, content, noteId);
     document.getElementById('filename').value = title;
     editor.setValue(content);
     document.getElementById('noteId').value = noteId;
-
+    currentNoteId = noteId;
+    
+    // Сохраняем данные заметки в localStorage
     localStorage.setItem('currentNote', JSON.stringify({
         id: noteId,
         title: title,
@@ -34,6 +44,9 @@ function createNewNote() {
     document.getElementById('filename').value = '';
     editor.setValue('');
     document.getElementById('noteId').value = '';
+    currentNoteId = null;
+    
+    // Очищаем сохранённую заметку
     localStorage.removeItem('currentNote');
 }
 
@@ -53,6 +66,43 @@ function restoreNoteFromStorage() {
     return false;
 }
 
+function renderNotesList() {
+    fetch('/api/notes')
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById('noteList');
+            list.innerHTML = '';
+            data.notes.forEach(note => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item bg-transparent text-white';
+                li.textContent = note.name;
+                li.onclick = () => loadNote(note.name, note.text, note.id);
+                list.appendChild(li);
+            });
+
+            const savedNote = localStorage.getItem('currentNote');
+            if (savedNote) {
+                try {
+                    const note = JSON.parse(savedNote);
+                    const exists = [...list.children].some(item => item.textContent === note.title);
+                    if (!exists && note.id) {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item bg-transparent text-white';
+                        li.textContent = note.title;
+                        li.onclick = () => loadNote(note.title, note.content, note.id);
+                        list.appendChild(li);
+                    }
+                } catch (e) {
+                    console.error("Ошибка при обработке сохранённой заметки:", e);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке списка заметок:', error);
+        });
+}
+
+// Функции для работы с задачами и диаграммами
 function insertTaskTemplate() {
     const template = '<t>Новая задача</t>';
     const cursor = editor.getCursor();
@@ -100,6 +150,7 @@ function insertDiagramTemplate() {
     openDiagramModal();
 }
 
+// Функции для предпросмотра и сохранения
 function toggleEditor() {
     document.getElementById('edit-tab').classList.add('active');
     document.getElementById('preview-tab').classList.remove('active');
@@ -164,13 +215,19 @@ function saveNote() {
     .then(data => {
         if (data.status === 'success') {
             alert("Заметка сохранена!");
+            
+            // Обновляем ID заметки (особенно важно для новых заметок)
             const savedNoteId = data.id || noteId;
             document.getElementById('noteId').value = savedNoteId;
+            currentNoteId = savedNoteId;
+            
+            // Обновляем данные в localStorage
             localStorage.setItem('currentNote', JSON.stringify({
                 id: savedNoteId,
                 title: filename,
                 content: text
             }));
+            
             renderNotesList();
         } else {
             alert("Ошибка при сохранении: " + (data.message || ''));
@@ -182,52 +239,105 @@ function saveNote() {
     });
 }
 
-function renderNotesList() {
-    fetch('/api/notes')
-    .then(res => res.json())
-    .then(data => {
-        const list = document.getElementById('noteList');
-        list.innerHTML = '';
-        data.notes.forEach(note => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item bg-transparent text-white';
-            li.textContent = note.name;
-            li.onclick = () => loadNote(note.name, note.text, note.id);
-            list.appendChild(li);
-        });
+// Функции для работы с доступом к заметкам
+function openAccessModal() {
+    if (!currentNoteId) {
+        alert("Сначала загрузите или создайте заметку");
+        return;
+    }
+    
+    document.getElementById('modalOverlay').style.display = 'block';
+    document.getElementById('accessModal').style.display = 'block';
+    loadAccessList();
+}
 
-        const savedNote = localStorage.getItem('currentNote');
-        if (savedNote) {
-            try {
-                const note = JSON.parse(savedNote);
-                const exists = [...list.children].some(item => item.textContent === note.title);
-                if (!exists && note.id) {
+function closeAccessModal() {
+    document.getElementById('modalOverlay').style.display = 'none';
+    document.getElementById('accessModal').style.display = 'none';
+}
+
+function loadAccessList() {
+    fetch(`/api/notes/${currentNoteId}/access`)
+        .then(res => res.json())
+        .then(data => {
+            const accessList = document.getElementById('accessList');
+            accessList.innerHTML = '';
+            
+            if (data.users && data.users.length > 0) {
+                data.users.forEach(user => {
                     const li = document.createElement('li');
-                    li.className = 'list-group-item bg-transparent text-white';
-                    li.textContent = note.title;
-                    li.onclick = () => loadNote(note.title, note.content, note.id);
-                    list.appendChild(li);
-                }
-            } catch (e) {
-                console.error("Ошибка при обработке сохранённой заметки:", e);
+                    li.className = 'list-group-item bg-transparent text-white access-user-item';
+                    li.innerHTML = `
+                        <span>${user.username} (ID: ${user.id})</span>
+                        <button class="remove-access-btn" onclick="removeUserAccess(${user.id})">Удалить</button>
+                    `;
+                    accessList.appendChild(li);
+                });
+            } else {
+                accessList.innerHTML = '<li class="list-group-item bg-transparent text-white">Нет пользователей с доступом</li>';
             }
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке списка доступа:', error);
+            alert('Не удалось загрузить список доступа');
+        });
+}
+
+function addUserAccess() {
+    const userId = document.getElementById('userIdInput').value.trim();
+    if (!userId) {
+        alert("Введите ID пользователя");
+        return;
+    }
+
+    fetch(`/api/notes/${currentNoteId}/access`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            user_id: userId,
+            access_level: 'admin' // Пока не имеет веса
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            document.getElementById('userIdInput').value = '';
+            loadAccessList();
+        } else {
+            alert(data.message || 'Ошибка при добавлении доступа');
         }
     })
     .catch(error => {
-        console.error('Ошибка при загрузке списка заметок:', error);
+        console.error('Ошибка:', error);
+        alert('Ошибка при добавлении доступа');
     });
 }
 
-function loadImage(url) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = url;
+function removeUserAccess(userId) {
+    if (!confirm("Вы уверены, что хотите удалить доступ у этого пользователя?")) {
+        return;
+    }
+
+    fetch(`/api/notes/${currentNoteId}/access/${userId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            loadAccessList();
+        } else {
+            alert(data.message || 'Ошибка при удалении доступа');
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при удалении доступа');
     });
 }
 
+// Функции для экспорта и скачивания
 async function exportToPDF() {
     const filename = document.getElementById('filename').value.trim();
     const text = editor.getValue();
@@ -278,6 +388,16 @@ async function exportToPDF() {
     }
 
     pdf.save(filename + '.pdf');
+}
+
+function loadImage(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+    });
 }
 
 function downloadFile() {

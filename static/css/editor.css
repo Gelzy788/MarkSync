@@ -142,3 +142,61 @@ h1 {
 .file-explorer li:hover {
     color: #24cc5f;
 }
+
+#accessModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 1001;
+    width: 500px;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(36, 204, 95, 0.3);
+}
+
+.access-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 15px;
+    border: 1px solid #24cc5f;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+#accessList {
+    margin-top: 10px;
+}
+
+.access-user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: rgba(34, 34, 34, 0.7);
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+.access-user-item:hover {
+    background-color: rgba(36, 204, 95, 0.1);
+}
+
+.remove-access-btn {
+    background: transparent;
+    border: 1px solid #ff6b6b;
+    color: #ff6b6b;
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.remove-access-btn:hover {
+    background: rgba(255, 107, 107, 0.2);
+}
