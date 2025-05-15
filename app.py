@@ -1,21 +1,14 @@
 from config import *
 from data.__all_models import *
-from data.users import Users
-from data.notes import Notes
-from data.notes_access import NotesAccess
 from forms.register_form import *
 from data import auth_blueprint, notes_blueprint
-from data.utils import convert_diagrams, convert_tasks, token_required
-import markdown2
-from data.utils import extract_diagrams, generate_pdf_from_markdown
-from flask import render_template, request, jsonify, send_file
+from data.utils import token_required
+from flask import render_template, request
 
 # Загрузка микро-приложений
 app.register_blueprint(auth_blueprint)
 app.register_blueprint(notes_blueprint)
 
-# Главная страница
-from flask import make_response
 
 # Главная страница
 @app.route('/')

@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, send_file
+from flask import render_template, request, jsonify
 
 from reportlab.platypus import Image as RLImage
 from reportlab.pdfbase import pdfmetrics
@@ -15,7 +15,7 @@ from data.notes import Notes
 from data.users import Users
 from . import notes_blueprint
 from data.notes_access import NotesAccess
-from data.utils import markdown_to_html, convert_tasks, convert_diagrams, extract_diagrams, generate_pdf_from_markdown, token_required
+from data.utils import markdown_to_html, convert_tasks, convert_diagrams, token_required
 
 
 # Подключение шрифта для сохранения заметок в pdf формате
@@ -237,15 +237,3 @@ def save_on_server(user):
         print("ERROR", e)
         db.session.rollback()
         return jsonify({'status': 'error', 'message': 'Ошибка сохранения'}), 500
-
-
-# Функция сохранения в pdf
-@notes_blueprint.route('/export_pdf')
-@token_required
-def export_pdf(user):
-    text = request.args.get('text', '')
-    if not text:
-        return jsonify({"error": "Нет текста для экспорта"}), 400
-    diagrams = extract_diagrams(text)
-    pdf_path = generate_pdf_from_markdown(text, diagrams)
-    return send_file(pdf_path, as_attachment=True, download_name="document.pdf")

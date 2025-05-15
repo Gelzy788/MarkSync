@@ -410,58 +410,6 @@ function removeUserAccess(userId, event) {
 }
 
 // Функции для экспорта и скачивания
-async function exportToPDF() {
-    const filename = document.getElementById('filename').value.trim();
-    const text = editor.getValue();
-    if (!filename || !text) {
-        alert("Введите имя файла и текст.");
-        return;
-    }
-
-    const pdf = new jspdf.jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-    });
-
-    const A4_WIDTH = 210;
-    const A4_HEIGHT = 297;
-    const MARGIN = 20;
-    let currentY = MARGIN;
-
-    const blocks = text.split(/(<d>[\s\S]*?<\/d>)/);
-    for (let block of blocks) {
-        if (block.startsWith('<d>') && block.endsWith('</d>')) {
-            const chartCode = block.substring(3, block.length - 4).trim();
-            try {
-                const url = `https://quickchart.io/chart?width=600&c=${encodeURIComponent(chartCode)}`;
-                const img = await loadImage(url);
-                if (currentY > A4_HEIGHT - MARGIN) {
-                    pdf.addPage();
-                    currentY = MARGIN;
-                }
-                const widthRatio = (A4_WIDTH - 2 * MARGIN) / img.width;
-                const imgHeight = img.height * widthRatio;
-                pdf.addImage(img.src, 'PNG', MARGIN, currentY, A4_WIDTH - 2 * MARGIN, imgHeight);
-                currentY += imgHeight + 10;
-            } catch (e) {
-                console.error("Ошибка при загрузке диаграммы:", e);
-            }
-        } else {
-            const lines = pdf.splitTextToSize(block, A4_WIDTH - 2 * MARGIN);
-            pdf.setFontSize(12);
-            pdf.text(lines, MARGIN, currentY);
-            currentY += lines.length * 6;
-            if (currentY > A4_HEIGHT - MARGIN) {
-                pdf.addPage();
-                currentY = MARGIN;
-            }
-        }
-    }
-
-    pdf.save(filename + '.pdf');
-}
-
 function loadImage(url) {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -476,11 +424,6 @@ function downloadFile() {
     const format = document.getElementById('downloadFormat').value;
     const text = editor.getValue();
     const filename = document.getElementById('filename').value.trim() || 'untitled';
-
-    if (format === 'pdf') {
-        exportToPDF();
-        return;
-    }
 
     let blob;
     let mime = 'text/plain';
