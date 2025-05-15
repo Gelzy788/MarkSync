@@ -1,3 +1,39 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    padding: 10px 20px;
+}
+
+.navbar-brand {
+    color: white;
+    font-size: 20px;
+    text-decoration: none;
+}
+
+.navbar-nav {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-nav li {
+    margin-left: 20px;
+}
+
+.navbar-nav a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+.navbar-nav a:hover {
+    color: #ccc;
+}
+
 /* Стили для кнопки меню */
 .navbar-toggler {
     display: none; /* Скрываем кнопку по умолчанию */
@@ -15,11 +51,25 @@
     }
 
     .navbar-nav {
-        display: none; /* Скрываем меню по умолчанию */
-        width: 100%;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background-color: #333;
+        flex-direction: column;
+        align-items: center;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
     .navbar-nav.active {
-        display: flex; /* Показываем меню при активации */
+        max-height: 300px; 
+        transition: max-height 0.5s ease-in;
+    }
+
+    .navbar-nav li {
+        margin: 10px 0;
     }
 }

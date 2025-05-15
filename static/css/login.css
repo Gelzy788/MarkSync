@@ -45,6 +45,7 @@ input {
     background-color: #222;
     color: #fff;
     border-radius: 5px;
+    font-size: 16px;
 }
 
 button {
@@ -58,6 +59,7 @@ button {
     font-weight: bold;
     margin-top: 10px;
     transition: all 0.3s ease;
+    font-size: 16px;
 }
 
 button:hover {
@@ -68,6 +70,7 @@ button:hover {
 .login-link {
     text-align: center;
     margin-top: 20px;
+    font-size: 14px;
 }
 
 .login-link a {
@@ -82,4 +85,38 @@ button:hover {
 .errors span {
     color: #ff6b6b;
     font-size: 0.9em;
+}
+
+/* === Мобильные стили === */
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 20px;
+        max-width: 90%;
+        border-radius: 8px;
+        box-shadow: 0 6px 15px rgba(36, 204, 95, 0.2);
+    }
+
+    h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    input,
+    button {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .login-link {
+        margin-top: 16px;
+        font-size: 14px;
+    }
+
+    body {
+        padding: 20px;
+    }
 }

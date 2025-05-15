@@ -47,18 +47,10 @@ body {
     color: #fff;
 }
 
-h1 {
-    text-align: center;
-    margin: 15px;
-    background: linear-gradient(to right, #24cc5f, #24cc5f, #0f0c29);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
 .container {
     display: flex;
     flex: 1;
+    flex-direction: row;
 }
 
 .tabs {
@@ -133,7 +125,8 @@ h1 {
     padding: 20px;
     border-radius: 10px;
     z-index: 1000;
-    width: 400px;
+    width: 90%;
+    max-width: 400px;
     box-shadow: 0 10px 30px rgba(36, 204, 95, 0.3);
 }
 
@@ -192,8 +185,8 @@ h1 {
     padding: 20px;
     border-radius: 10px;
     z-index: 1001;
-    width: 500px;
-    max-width: 90%;
+    width: 90%;
+    max-width: 500px;
     max-height: 80vh;
     overflow-y: auto;
     box-shadow: 0 10px 30px rgba(36, 204, 95, 0.3);
@@ -238,4 +231,82 @@ h1 {
 
 .remove-access-btn:hover {
     background: rgba(255, 107, 107, 0.2);
+}
+
+/* === Мобильные стили === */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .file-explorer {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #24cc5f;
+    }
+
+    .main-content {
+        flex: 1;
+        flex-direction: column;
+    }
+
+    .text-editor {
+        height: 300px;
+        max-height: 300px;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+
+    .btn-gradient-green {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+
+    .btn-account {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+
+    .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .btn-account {
+        align-self: flex-end;
+    }
+
+    .form-select,
+    .form-control {
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+
+    #diagramModal,
+    #accessModal {
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+    }
+}
+
+@media (max-width: 768px) {
+    .mobile-buttons {
+        display: flex !important;
+    }
+
+    /* Убираем стандартный select на мобильных, чтобы не дублировался */
+    #editor-section > .d-none.d-md-flex {
+        display: none !important;
+    }
+
+    /* Делаем кнопки шире, чтобы занимали всю ширину */
+    .mobile-buttons .form-select,
+    .mobile-buttons .btn {
+        width: 100%;
+    }
 }

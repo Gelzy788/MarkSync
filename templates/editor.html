@@ -61,6 +61,15 @@
                     <button type="button" onclick="insertDiagramTemplate()" class="btn btn-gradient-green">Диаграмма</button>
                     <button type="button" onclick="openAccessModal()" class="btn btn-gradient-green">Доступ</button>
                 </div>
+                <div class="mobile-buttons d-flex flex-column gap-2 mt-2 d-md-none">
+                    <label for="downloadFormat" class="form-label mb-0">Формат:</label>
+                    <select id="downloadFormat" class="form-select">
+                        <option value="md">Markdown (.md)</option>
+                        <option value="txt">Текст (.txt)</option>
+                        <option value="html">HTML (.html)</option>
+                    </select>
+                    <button type="button" onclick="openAccessModal()" class="btn btn-gradient-green w-100">Доступ</button>
+                </div>
             </div>
             <div id="preview-section" style="display: none; flex: 1; overflow-y: auto;">
                 <h2>Предпросмотр</h2>
