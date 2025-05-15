@@ -15,15 +15,26 @@ app.register_blueprint(auth_blueprint)
 app.register_blueprint(notes_blueprint)
 
 # Главная страница
+from flask import make_response
+
+# Главная страница
 @app.route('/')
 def main():
-    return render_template('main.html', title="Главная страница")
+    # Проверяем наличие токенов в куках
+    access_token = request.cookies.get('access_token')
+    refresh_token = request.cookies.get('refresh_token')
+    
+    # Передаем информацию о наличии токенов в шаблон
+    return render_template(
+        'main.html', 
+        title="Главная страница",
+        is_authenticated=bool(access_token and refresh_token))
 
 # Страница профиля
 @app.route('/profile')
 @token_required
 def profile(user):
-    return render_template('profile.html', username=user.username, email=user.email, title="Профиль")
+    return render_template('profile.html', user_id=user.ID, username=user.username, email=user.email, title="Профиль")
 
 
 if __name__ == "__main__":

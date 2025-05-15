@@ -8,9 +8,22 @@
 </head>
 <body>
     <div class="profile-container">
-        <h1>Ваш профиль</h1>
+        <div class="profile-header">
+            <h1>Ваш профиль</h1>
+            <a href="{{ url_for('main') }}" class="btn-home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5v-4h2v4a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146zM2.5 14V7.707l5.5-5.5 5.5 5.5V14H10v-4a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v4H2.5z"/>
+                </svg>
+                На главную
+            </a>
+        </div>
         
         <div class="profile-info">
+            <div class="info-group">
+                <div class="info-label">ID:</div>
+                <div class="info-value">{{ user_id }}</div>
+            </div>
+
             <div class="info-group">
                 <div class="info-label">Имя пользователя:</div>
                 <div class="info-value">{{ username }}</div>
@@ -22,7 +35,9 @@
             </div>
         </div>
 
-        <a href="{{ url_for('auth.logout') }}" class="logout-btn">Выйти</a>
+        <div class="profile-actions">
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Выйти</a>
+        </div>
     </div>
 </body>
 </html>

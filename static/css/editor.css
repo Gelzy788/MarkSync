@@ -1,3 +1,42 @@
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid #24cc5f;
+}
+
+.btn-account {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid #24cc5f;
+    color: #24cc5f;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-account:hover {
+    background: rgba(36, 204, 95, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-account svg {
+    margin-right: 5px;
+}
+
+h1 {
+    margin: 0;
+    background: linear-gradient(to right, #24cc5f, #24cc5f, #0f0c29);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;

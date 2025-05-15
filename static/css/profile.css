@@ -11,7 +11,7 @@ body {
 
 .profile-container {
     width: 100%;
-    max-width: 500px;
+    max-width: 600px;
     padding: 30px;
     background: rgba(26, 26, 26, 0.8);
     border-radius: 10px;
@@ -19,13 +19,41 @@ body {
     border: 1px solid #24cc5f;
 }
 
-h1 {
-    text-align: center;
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 30px;
+}
+
+h1 {
+    margin: 0;
     background: linear-gradient(to right, #24cc5f, #24cc5f, #0f0c29);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.btn-home {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid #24cc5f;
+    color: #24cc5f;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-home:hover {
+    background: rgba(36, 204, 95, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-home svg {
+    margin-right: 5px;
 }
 
 .profile-info {
@@ -48,6 +76,11 @@ h1 {
 
 .info-value {
     font-size: 1.1rem;
+}
+
+.profile-actions {
+    display: flex;
+    justify-content: space-between;
 }
 
 .logout-btn {

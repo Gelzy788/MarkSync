@@ -27,12 +27,16 @@
             <section class="home-actions">
                 <h2>Начните прямо сейчас</h2>
                 <div class="action-buttons">
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Зарегистрироваться</a>
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Войти</a>
+                    {% if is_authenticated %}
+                        <a href="{{ url_for('profile') }}" class="btn btn-primary">Профиль</a>
+                        <a href="{{ url_for('main.marks') }}" class="btn btn-secondary">Мои заметки</a>
+                    {% else %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Зарегистрироваться</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Войти</a>
+                    {% endif %}
                 </div>
             </section>
         </main>
-
     </div>
 </body>
 </html>

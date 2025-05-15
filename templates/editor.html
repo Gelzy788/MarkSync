@@ -16,7 +16,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-dark text-white" onload="initEditor()">
-    <h1>MarkSync</h1>
+    <!-- Новый хедер с кнопкой аккаунта -->
+    <div class="header-container">
+        <h1>MarkSync</h1>
+        <a href="{{ url_for('profile') }}" class="btn btn-account">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+            </svg>
+            Аккаунт
+        </a>
+    </div>
+
     <div class="container">
         <div class="file-explorer">
             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -61,6 +72,7 @@
         </div>
     </div>
 
+    <!-- Модальное окно диаграмм -->
     <div id="diagramModal" class="shadow-lg rounded p-3 bg-secondary">
         <h3 class="mb-3">Создать диаграмму</h3>
         <form id="diagramForm">
@@ -82,10 +94,8 @@
             <button type="button" onclick="closeDiagramModal()" class="btn btn-gradient-outline">Отмена</button>
         </form>
     </div>
-    <div id="modalOverlay"></div>
 
-    <script src="static/js/editor.js"></script>
-
+    <!-- Модальное окно управления доступом -->
     <div id="accessModal" class="shadow-lg rounded p-3 bg-secondary">
         <h3 class="mb-3">Управление доступом</h3>
         <div class="mb-3">
@@ -106,5 +116,9 @@
         </div>
     </div>
 
+    <!-- Оверлей для модальных окон -->
+    <div id="modalOverlay"></div>
+
+    <script src="static/js/editor.js"></script>
 </body>
 </html>

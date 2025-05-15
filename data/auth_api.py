@@ -40,10 +40,13 @@ def login():
         res = login_user_db(email, password)
         if res[1] == 200:
             access_token = generate_access_token(res[0])
-            refresh_token = generate_refresh_token(res[0])# <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            refresh_token = generate_refresh_token(res[0])
             add_refresh_token_db(email, refresh_token)
-            response = make_response(render_template('main.html', title="Главная страница"))
-            save_tokens(response, access_token, refresh_token)
+            
+            # Создаем редирект на главную страницу с куками
+            response = make_response(redirect(url_for('main')))
+            response.set_cookie('access_token', access_token, httponly=True, secure=True, samesite='Strict')
+            response.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Strict')
             return response
         else:
             flash('Неверный email или пароль.', 'error')
