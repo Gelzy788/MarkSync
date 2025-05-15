@@ -30,16 +30,21 @@ except Exception:
 
 
 # Страница с заметками
-# @app.route('/marks', methods=['GET', 'POST'])
 @notes_blueprint.route('/marks', methods=['GET', 'POST'])
 @token_required
 def marks(user):
-    files = Notes.query.filter_by(user_id=user.ID).all()
+    # Получаем уникальные заметки
+    user_notes = Notes.query.filter_by(user_id=user.ID).all()
     notes_accesses = NotesAccess.query.filter_by(user_id=user.ID).all()
-    for i in notes_accesses:
-        note = Notes.query.filter_by(ID=i.note_id).first()
-        if note:
-            files.append(note)
+    
+    # Собираем ID всех заметок, чтобы избежать дублирования
+    note_ids = {note.ID for note in user_notes}
+    for access in notes_accesses:
+        if access.note_id not in note_ids:
+            note = Notes.query.filter_by(ID=access.note_id).first()
+            if note:
+                user_notes.append(note)
+                note_ids.add(note.ID)
     
     text = ''
     html = ''
@@ -48,8 +53,8 @@ def marks(user):
         text = convert_tasks(text)
         text = convert_diagrams(text)
         html = markdown2.markdown(text, extras=["fenced-code-blocks", "tables", "strike"])
-    print([i.ID for i in files])
-    return render_template('editor.html', text=text, html=html, files=files)
+    
+    return render_template('editor.html', text=text, html=html, files=user_notes)
 
 
 # Выдача досутпа к заметке
@@ -182,15 +187,25 @@ def preview(user):
 @notes_blueprint.route('/api/notes')
 @token_required
 def api_notes(user):
+    # Собираем ID всех заметок, чтобы избежать дублирования
+    note_ids = set()
+    notes = []
+    
     # Собственные заметки пользователя
-    notes = Notes.query.filter_by(user_id=user.ID).all()
+    user_notes = Notes.query.filter_by(user_id=user.ID).all()
+    for note in user_notes:
+        if note.ID not in note_ids:
+            notes.append(note)
+            note_ids.add(note.ID)
     
     # Заметки, к которым у пользователя есть доступ
     notes_accesses = NotesAccess.query.filter_by(user_id=user.ID).all()
     for access in notes_accesses:
-        note = Notes.query.filter_by(ID=access.note_id).first()
-        if note and note not in notes:  # Проверяем, чтобы не было дубликатов
-            notes.append(note)
+        if access.note_id not in note_ids:
+            note = Notes.query.filter_by(ID=access.note_id).first()
+            if note:
+                notes.append(note)
+                note_ids.add(note.ID)
     
     return jsonify({'notes': [{'name': note.name, 'text': note.text, 'id': note.ID} for note in notes]})
 

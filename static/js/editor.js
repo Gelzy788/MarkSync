@@ -269,7 +269,7 @@ function loadAccessList() {
                     li.className = 'list-group-item bg-transparent text-white access-user-item';
                     li.innerHTML = `
                         <span>${user.username} (ID: ${user.id})</span>
-                        <button class="remove-access-btn" onclick="removeUserAccess(${user.id})">Удалить</button>
+                        <button class="remove-access-btn" onclick="removeUserAccess(${user.id}, event)">Удалить</button>
                     `;
                     accessList.appendChild(li);
                 });
@@ -315,7 +315,9 @@ function addUserAccess() {
     });
 }
 
-function removeUserAccess(userId) {
+function removeUserAccess(userId, event) {
+    event.stopPropagation();  // Предотвращаем всплытие события
+    
     if (!confirm("Вы уверены, что хотите удалить доступ у этого пользователя?")) {
         return;
     }
@@ -323,7 +325,12 @@ function removeUserAccess(userId) {
     fetch(`/api/notes/${currentNoteId}/access/${userId}`, {
         method: 'DELETE'
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.status === 'success') {
             loadAccessList();
@@ -333,7 +340,7 @@ function removeUserAccess(userId) {
     })
     .catch(error => {
         console.error('Ошибка:', error);
-        alert('Ошибка при удалении доступа');
+        alert(error.message || 'Ошибка при удалении доступа');
     });
 }
 
